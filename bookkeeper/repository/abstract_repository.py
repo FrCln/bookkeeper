@@ -16,6 +16,8 @@ class AbstractRepository(ABC):
     Абстрактные методы:
     add
     get
+    update
+    delete
     """
 
     @abstractmethod
@@ -28,3 +30,11 @@ class AbstractRepository(ABC):
     @abstractmethod
     def get(self, pk):
         """ Получить объект по id """
+
+    @abstractmethod
+    def update(self, obj):
+        """ Обновить данные об объекте. Объект должен содержать поле pk. """
+
+    @abstractmethod
+    def delete(self, pk):
+        """ Удалить запись """
