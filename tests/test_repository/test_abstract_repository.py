@@ -16,4 +16,4 @@ def test_can_create_subclass():
         def delete(self, pk): pass
 
     t = Test()
-    assert isinstance(t, Test)
+    assert isinstance(t, AbstractRepository)
