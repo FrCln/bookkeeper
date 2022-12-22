@@ -3,6 +3,7 @@
 """
 
 from dataclasses import dataclass
+from typing import Generator
 
 from ..repository.abstract_repository import AbstractRepository
 
@@ -33,3 +34,21 @@ class Category:
         if self.parent is None:
             return None
         return repo.get(self.parent)
+
+    def get_all_parents(self, repo: AbstractRepository['Category']) -> Generator['Category', None, None]:
+        """
+        Generator of all parents in category hierarchy
+
+        Parameters
+        ----------
+        repo - repository to get objects
+
+        Yields
+        -------
+        Category objects from direct parent up to root
+        """
+        parent = self.get_parent(repo)
+        if parent is None:
+            return
+        yield parent
+        yield from parent.get_all_parents(repo)

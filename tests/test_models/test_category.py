@@ -1,6 +1,7 @@
 """
 Тесты для категорий расходов
 """
+from inspect import isgenerator
 
 import pytest
 
@@ -51,3 +52,13 @@ def test_get_parent(repo):
     c2 = Category(name='name', parent=pk)
     repo.add(c2)
     assert c2.get_parent(repo) == c1
+
+
+def test_get_all_parents(repo):
+    parent_pk = None
+    for i in range(5):
+        c = Category(str(i), parent=parent_pk)
+        parent_pk = repo.add(c)
+    gen = c.get_all_parents(repo)
+    assert isgenerator(gen)
+    assert [c.name for c in gen] == ['3', '2', '1', '0']
