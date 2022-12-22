@@ -20,6 +20,9 @@ def test_create_object():
 
 
 def test_reassign():
+    """
+    class should not be frozen
+    """
     c = Category('name')
     c.name = 'test'
     c.pk = 1
@@ -28,6 +31,9 @@ def test_reassign():
 
 
 def test_eq():
+    """
+    class should implement __eq__ method
+    """
     c1 = Category(name='name', parent=1, pk=2)
     c2 = Category(name='name', parent=1, pk=2)
     assert c1 == c2
