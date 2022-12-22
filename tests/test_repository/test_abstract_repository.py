@@ -12,6 +12,7 @@ def test_can_create_subclass():
     class Test(AbstractRepository):
         def add(self, obj): pass
         def get(self, pk): pass
+        def get_all(self, where = None): pass
         def update(self, obj): pass
         def delete(self, pk): pass
 

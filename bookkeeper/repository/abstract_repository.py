@@ -8,7 +8,7 @@
 """
 
 from abc import ABC, abstractmethod
-from typing import Generic, TypeVar, Protocol
+from typing import Generic, TypeVar, Protocol, Any
 
 
 class Model(Protocol):
@@ -27,6 +27,7 @@ class AbstractRepository(ABC, Generic[T]):
     Абстрактные методы:
     add
     get
+    get_all
     update
     delete
     """
@@ -41,6 +42,14 @@ class AbstractRepository(ABC, Generic[T]):
     @abstractmethod
     def get(self, pk: int) -> T | None:
         """ Получить объект по id """
+
+    @abstractmethod
+    def get_all(self, where: dict[str, Any] | None = None) -> list[T]:
+        """
+        Получить все записи по некоторому условию
+        where - условие в виде словаря {'название_поля': значение}
+        если условие не задано (по умолчанию), вернуть все записи
+        """
 
     @abstractmethod
     def update(self, obj: T) -> None:

@@ -3,6 +3,7 @@
 """
 
 from itertools import count
+from typing import Any
 
 from bookkeeper.repository.abstract_repository import AbstractRepository, T
 
@@ -26,6 +27,12 @@ class MemoryRepository(AbstractRepository[T]):
 
     def get(self, pk: int) -> T | None:
         return self._container.get(pk)
+
+    def get_all(self, where: dict[str, Any] | None = None) -> list[T]:
+        if where is None:
+            return list(self._container.values())
+        return [obj for obj in self._container.values()
+                if all(getattr(obj, attr) == value for attr, value in where.items())]
 
     def update(self, obj: T) -> None:
         if obj.pk is None:
