@@ -8,9 +8,20 @@
 """
 
 from abc import ABC, abstractmethod
+from typing import Generic, TypeVar, Protocol
 
 
-class AbstractRepository(ABC):
+class Model(Protocol):
+    """
+    Model should contain pk attribute
+    """
+    pk: int | None
+
+
+T = TypeVar('T', bound=Model)
+
+
+class AbstractRepository(ABC, Generic[T]):
     """
     Абстрактный репозиторий.
     Абстрактные методы:
@@ -21,20 +32,20 @@ class AbstractRepository(ABC):
     """
 
     @abstractmethod
-    def add(self, obj) -> int:
+    def add(self, obj: T) -> int:
         """
         Добавить объект в репозиторий, вернуть id объекта,
         также записать id в атрибут pk.
         """
 
     @abstractmethod
-    def get(self, pk):
+    def get(self, pk: int) -> T | None:
         """ Получить объект по id """
 
     @abstractmethod
-    def update(self, obj):
+    def update(self, obj: T) -> None:
         """ Обновить данные об объекте. Объект должен содержать поле pk. """
 
     @abstractmethod
-    def delete(self, pk):
+    def delete(self, pk: int) -> None:
         """ Удалить запись """
