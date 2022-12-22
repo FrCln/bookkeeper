@@ -5,6 +5,12 @@
 import pytest
 
 from bookkeeper.models.category import Category
+from bookkeeper.repository.memory_repository import MemoryRepository
+
+
+@pytest.fixture
+def repo():
+    return MemoryRepository()
 
 
 def test_create_object():
@@ -37,3 +43,11 @@ def test_eq():
     c1 = Category(name='name', parent=1, pk=2)
     c2 = Category(name='name', parent=1, pk=2)
     assert c1 == c2
+
+
+def test_get_parent(repo):
+    c1 = Category(name='parent')
+    pk = repo.add(c1)
+    c2 = Category(name='name', parent=pk)
+    repo.add(c2)
+    assert c2.get_parent(repo) == c1
