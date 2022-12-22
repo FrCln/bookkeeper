@@ -1,7 +1,7 @@
 """
 Модель категории расходов
 """
-
+from collections import defaultdict
 from dataclasses import dataclass
 from typing import Generator
 
@@ -52,3 +52,28 @@ class Category:
             return
         yield parent
         yield from parent.get_all_parents(repo)
+
+    def get_subcategories(self, repo: AbstractRepository['Category']) \
+            -> Generator['Category', None, None]:
+        """
+        Get all subcategories from whole tree, i.d. self's children,
+        their children and so on.
+
+        Parameters
+        ----------
+        repo - repository to get objects
+
+        Yields
+        -------
+        Category objects that are successors of self
+        """
+        def get_children(graph, root):
+            """ dfs in graph from root """
+            for x in graph[root]:
+                yield x
+                yield from get_children(graph, x.pk)
+
+        subcats = defaultdict(list)
+        for c in repo.get_all():
+            subcats[c.parent].append(c)
+        return get_children(subcats, self.pk)

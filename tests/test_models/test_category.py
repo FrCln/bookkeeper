@@ -62,3 +62,29 @@ def test_get_all_parents(repo):
     gen = c.get_all_parents(repo)
     assert isgenerator(gen)
     assert [c.name for c in gen] == ['3', '2', '1', '0']
+
+
+def test_get_subcategories(repo: MemoryRepository[Category]):
+    parent_pk = None
+    for i in range(5):
+        c = Category(str(i), parent=parent_pk)
+        parent_pk = repo.add(c)
+    c = repo.get_all({'name': '0'})[0]
+    gen = c.get_subcategories(repo)
+    assert isgenerator(gen)
+    # using set because order doesn't matter
+    assert {c.name for c in gen} == {'1', '2', '3', '4'}
+
+
+def test_get_subcategories_complicated(repo: MemoryRepository[Category]):
+    root = Category('0')
+    root_pk = repo.add(root)
+    repo.add(Category('1', root_pk))
+    pk2 = repo.add(Category('2', root_pk))
+    repo.add(Category('3', pk2))
+    repo.add(Category('4', pk2))
+
+    gen = root.get_subcategories(repo)
+    assert isgenerator(gen)
+    # using set because order doesn't matter
+    assert {c.name for c in gen} == {'1', '2', '3', '4'}
