@@ -77,3 +77,27 @@ class Category:
         for c in repo.get_all():
             subcats[c.parent].append(c)
         return get_children(subcats, self.pk)
+
+    @classmethod
+    def create_from_tree(
+            cls,
+            tree: list[tuple[str, str | None]],
+            repo: AbstractRepository['Category']) -> list['Category']:
+        """
+        Create categories from tree of names. Tree must be topologically sorted.
+
+        Parameters
+        ----------
+        tree - list of pairs (child, parent)
+        repo - repository to add objects
+
+        Returns
+        -------
+        List of Category objects
+        """
+        created: dict[str, Category] = {}
+        for child, parent in tree:
+            c = cls(child, created[parent].pk if parent is not None else None)
+            repo.add(c)
+            created[child] = c
+        return list(created.values())

@@ -88,3 +88,21 @@ def test_get_subcategories_complicated(repo: MemoryRepository[Category]):
     assert isgenerator(gen)
     # using set because order doesn't matter
     assert {c.name for c in gen} == {'1', '2', '3', '4'}
+
+
+def test_create_from_tree(repo):
+    tree = [('parent', None), ('1', 'parent'), ('2', '1')]
+    cats = Category.create_from_tree(tree, repo)
+    assert len(cats) == len(tree)
+    parent = next(c for c in cats if c.name == 'parent')
+    assert parent.parent is None
+    c1 = next(c for c in cats if c.name == '1')
+    assert c1.parent == parent.pk
+    c2 = next(c for c in cats if c.name == '2')
+    assert c2.parent == c1.pk
+
+
+def test_create_from_tree_error(repo):
+    tree = [('1', 'parent'), ('parent', None)]
+    with pytest.raises(KeyError):
+        Category.create_from_tree(tree, repo)
