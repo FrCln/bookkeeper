@@ -15,7 +15,7 @@ class Model(Protocol):
     """
     Model should contain pk attribute
     """
-    pk: int | None
+    pk: int
 
 
 T = TypeVar('T', bound=Model)

@@ -17,7 +17,7 @@ def repo():
 def test_create_object():
     c = Category('name')
     assert c.name == 'name'
-    assert c.pk is None
+    assert c.pk == 0
     assert c.parent is None
 
     c = Category(name='name', parent=1, pk=2)

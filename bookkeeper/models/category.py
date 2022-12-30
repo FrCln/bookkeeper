@@ -17,7 +17,7 @@ class Category:
     """
     name: str
     parent: int | None = None
-    pk: int | None = None
+    pk: int = 0
 
     def get_parent(self, repo: AbstractRepository['Category']) -> 'Category | None':
         """
@@ -67,6 +67,7 @@ class Category:
         -------
         Category objects that are successors of self
         """
+
         def get_children(graph, root):
             """ dfs in graph from root """
             for x in graph[root]:
