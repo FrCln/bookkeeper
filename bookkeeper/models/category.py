@@ -3,7 +3,7 @@
 """
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Generator
+from typing import Iterator
 
 from ..repository.abstract_repository import AbstractRepository
 
@@ -11,15 +11,16 @@ from ..repository.abstract_repository import AbstractRepository
 @dataclass
 class Category:
     """
-    Категория расходов, хранит название в атрибуте name и ссылку (id) на родителя
-    в атрибуте parent.
+    Категория расходов, хранит название в атрибуте name и ссылку (id) на
+    родителя в атрибуте parent.
     У категорий верхнего уровня parent = None
     """
     name: str
     parent: int | None = None
     pk: int = 0
 
-    def get_parent(self, repo: AbstractRepository['Category']) -> 'Category | None':
+    def get_parent(self,
+                   repo: AbstractRepository['Category']) -> 'Category | None':
         """
         Get parent category
 
@@ -35,7 +36,9 @@ class Category:
             return None
         return repo.get(self.parent)
 
-    def get_all_parents(self, repo: AbstractRepository['Category']) -> Generator['Category', None, None]:
+    def get_all_parents(self,
+                        repo: AbstractRepository['Category']
+                        ) -> Iterator['Category']:
         """
         Generator of all parents in category hierarchy
 
@@ -53,8 +56,9 @@ class Category:
         yield parent
         yield from parent.get_all_parents(repo)
 
-    def get_subcategories(self, repo: AbstractRepository['Category']) \
-            -> Generator['Category', None, None]:
+    def get_subcategories(self,
+                          repo: AbstractRepository['Category']
+                          ) -> Iterator['Category']:
         """
         Get all subcategories from whole tree, i.d. self's children,
         their children and so on.
