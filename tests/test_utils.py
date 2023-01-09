@@ -28,9 +28,9 @@ def test_ignore_empty_strings():
         parent1
             child1
                 grandchild
-                
+
             child2
-            
+
         parent2
     ''')
     assert read_tree(text.splitlines()) == [
