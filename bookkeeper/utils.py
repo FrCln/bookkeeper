@@ -2,15 +2,14 @@
 Utility functions
 """
 
-
-from typing import Iterable, Generator
+from typing import Iterable, Iterator
 
 
 def _get_indent(line: str) -> int:
     return len(line) - len(line.lstrip())
 
 
-def _lines_with_indent(lines: Iterable[str]) -> Generator[tuple[int, str], None, None]:
+def _lines_with_indent(lines: Iterable[str]) -> Iterator[tuple[int, str]]:
     for line in lines:
         if not line or line.isspace():
             continue
@@ -28,7 +27,9 @@ def read_tree(lines: Iterable[str]) -> list[tuple[str, str | None]]:
             child2
         child3
 
-    will give the tree: [('parent', None), ('child1', 'parent'), ('child2', 'child1'), ('child3', 'parent')]
+    will give the tree:
+    [('parent', None), ('child1', 'parent'),
+     ('child2', 'child1'), ('child3', 'parent')]
 
     Empty lines are ignored.
 
