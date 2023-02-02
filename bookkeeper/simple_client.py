@@ -23,9 +23,12 @@ cats = '''
 Category.create_from_tree(read_tree(cats), cat_repo)
 
 while True:
-    cmd = input('$> ')
-    if not cmd:
+    try:
+        cmd = input('$> ')
+    except EOFError:
         break
+    if not cmd:
+        continue
     if cmd == 'категории':
         print(*cat_repo.get_all(), sep='\n')
     elif cmd == 'расходы':
