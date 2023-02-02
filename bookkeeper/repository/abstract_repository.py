@@ -11,9 +11,9 @@ from abc import ABC, abstractmethod
 from typing import Generic, TypeVar, Protocol, Any
 
 
-class Model(Protocol):
+class Model(Protocol):  # pylint: disable=too-few-public-methods
     """
-    Model should contain pk attribute
+    Модель должна содержать атрибут pk
     """
     pk: int
 

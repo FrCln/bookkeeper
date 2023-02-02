@@ -12,7 +12,7 @@ from ..repository.abstract_repository import AbstractRepository
 class Category:
     """
     Категория расходов, хранит название в атрибуте name и ссылку (id) на
-    родителя в атрибуте parent.
+    родителя (категория, подкатегорией которой является данная) в атрибуте parent.
     У категорий верхнего уровня parent = None
     """
     name: str
@@ -22,15 +22,16 @@ class Category:
     def get_parent(self,
                    repo: AbstractRepository['Category']) -> 'Category | None':
         """
-        Get parent category
+        Получить родительскую категорию в виде объекта Category
+        Если метод вызван у категории верхнего уровня, возвращает None
 
         Parameters
         ----------
-        repo - repository to get objects
+        repo - репозиторий для получения объектов
 
         Returns
         -------
-        Category object or None if there is no parent
+        Объект класса Category или None
         """
         if self.parent is None:
             return None
@@ -40,15 +41,15 @@ class Category:
                         repo: AbstractRepository['Category']
                         ) -> Iterator['Category']:
         """
-        Generator of all parents in category hierarchy
+        Получить все категории верхнего уровня в иерархии.
 
         Parameters
         ----------
-        repo - repository to get objects
+        repo - репозиторий для получения объектов
 
         Yields
         -------
-        Category objects from direct parent up to root
+        Объекты Category от родителя и выше до категории верхнего уровня
         """
         parent = self.get_parent(repo)
         if parent is None:
@@ -60,16 +61,16 @@ class Category:
                           repo: AbstractRepository['Category']
                           ) -> Iterator['Category']:
         """
-        Get all subcategories from whole tree, i.d. self's children,
-        their children and so on.
+        Получить все подкатегории из иерархии, т.е. непосредственные
+        подкатегории данной, все их подкатегории и т.д.
 
         Parameters
         ----------
-        repo - repository to get objects
+        repo - репозиторий для получения объектов
 
         Yields
         -------
-        Category objects that are successors of self
+        Объекты Category, являющиеся подкатегориями разного уровня ниже данной.
         """
 
         def get_children(graph, root):
@@ -79,8 +80,8 @@ class Category:
                 yield from get_children(graph, x.pk)
 
         subcats = defaultdict(list)
-        for c in repo.get_all():
-            subcats[c.parent].append(c)
+        for cat in repo.get_all():
+            subcats[cat.parent].append(cat)
         return get_children(subcats, self.pk)
 
     @classmethod
@@ -89,20 +90,28 @@ class Category:
             tree: list[tuple[str, str | None]],
             repo: AbstractRepository['Category']) -> list['Category']:
         """
-        Create categories from tree of names. Tree must be topologically sorted.
+        Создать дерево категорий из списка пар "потомок-родитель".
+        Список должен быть топологически отсортирован, т.е. потомки
+        не должны встречаться раньше своего родителя.
+        Проверка корректности исходных данных не производится.
+        При использовании СУБД с проверкой внешних ключей, будет получена
+        ошибка (для sqlite3 - IntegrityError). При отсутствии проверки
+        со стороны СУБД, результат, возможно, будет корректным, если исходные
+        данные корректны за исключением сортировки. Если нет, то нет.
+        "Мусор на входе, мусор на выходе".
 
         Parameters
         ----------
-        tree - list of pairs (child, parent)
-        repo - repository to add objects
+        tree - список пар "потомок-родитель"
+        repo - репозиторий для сохранения объектов
 
         Returns
         -------
-        List of Category objects
+        Список созданных объектов Category
         """
         created: dict[str, Category] = {}
         for child, parent in tree:
-            c = cls(child, created[parent].pk if parent is not None else None)
-            repo.add(c)
-            created[child] = c
+            cat = cls(child, created[parent].pk if parent is not None else None)
+            repo.add(cat)
+            created[child] = cat
         return list(created.values())

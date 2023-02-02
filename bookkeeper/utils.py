@@ -1,5 +1,5 @@
 """
-Utility functions
+Вспомогательные функции
 """
 
 from typing import Iterable, Iterator
@@ -18,29 +18,29 @@ def _lines_with_indent(lines: Iterable[str]) -> Iterator[tuple[int, str]]:
 
 def read_tree(lines: Iterable[str]) -> list[tuple[str, str | None]]:
     """
-    Read tree structure from indented text file. Return pairs of child-parent.
-    Root's parent is None
+    Прочитать структуру дерева из текста на основе отступов. Вернуть список
+    пар "потомок-родитель" в порядке топологической сортировки. Родитель
+    элемента верхнего уровня - None.
 
-    Example. The following text:
+    Пример. Следующий текст:
     parent
         child1
             child2
         child3
 
-    will give the tree:
+    даст такое дерево:
     [('parent', None), ('child1', 'parent'),
      ('child2', 'child1'), ('child3', 'parent')]
 
-    Empty lines are ignored.
+    Пустые строки игнорируются.
 
     Parameters
     ----------
-    lines - Iterable of lines (file object or list of lines)
+    lines - Итерируемый объект, содержащий строки текста (файл или список строк)
 
     Returns
     -------
-    List of child-parent pairs
-
+    Список пар "потомок-родитель"
     """
     parents: list[tuple[str | None, int]] = []
     last_indent = -1
