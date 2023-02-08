@@ -73,7 +73,8 @@ class Category:
         Объекты Category, являющиеся подкатегориями разного уровня ниже данной.
         """
 
-        def get_children(graph, root):
+        def get_children(graph: dict[int | None, list['Category']],
+                         root: int) -> Iterator['Category']:
             """ dfs in graph from root """
             for x in graph[root]:
                 yield x

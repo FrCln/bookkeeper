@@ -43,7 +43,7 @@ poetry install
 что вы находитесь в корневой папке проекта):
 ```commandline
 poetry run pytest --cov
-poetry run mypy bookkeeper
+poetry run mypy --strict bookkeeper
 poetry run pylint bookkeeper
 poetry run flake8 bookkeeper
 ```
