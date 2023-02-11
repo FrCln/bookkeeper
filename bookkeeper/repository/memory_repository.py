@@ -41,3 +41,5 @@ class MemoryRepository(AbstractRepository[T]):
 
     def delete(self, pk: int) -> None:
         self._container.pop(pk)
+        
+        
