@@ -35,11 +35,8 @@ class SQLiteRepository(AbstractRepository[T]):
 
 	def add(self, obj: T) -> int:
 		names = ', '.join(self.fields.keys())
-		#print("names", names)
 		p = ', '.join("?" * len(self.fields))
-		#print("p", p)
 		values = [getattr(obj, x) for x in self.fields]
-		#print(values)
 		print(f"INSERT INTO %s (%s) VALUES (%s)" % (self.table_name, names, p), values)
 		with sqlite3.connect(self.db_file) as con:
 			cur = con.cursor()
@@ -52,7 +49,7 @@ class SQLiteRepository(AbstractRepository[T]):
 		
 	
 	def get(self, pk: int) -> T | None:
-		names = ', '.join(self.fields.keys())
+		#names = ', '.join(self.fields.keys())
 		with sqlite3.connect(self.db_file) as con:
 			cur = con.cursor()
 			print(f"SELECT %s FROM %s WHERE id = %s;" % (names, self.table_name, pk))
@@ -73,7 +70,7 @@ class SQLiteRepository(AbstractRepository[T]):
 		if where is None:
 			with sqlite3.connect(self.db_file) as con:
 				cur = con.cursor()
-				res = cur.execute(f"SELECT * FROM {self.table_name}")
+				res = cur.execute(f"SELECT * FROM {self.table_name};")
 				attribs = res.fetchall()
 			con.close()
 			for att in attribs:
@@ -86,7 +83,7 @@ class SQLiteRepository(AbstractRepository[T]):
 				right_sets = []
 				for key, value in where.items():
 					res = cur.execute(f"""Select * FROM {self.table_name} 
-					WHERE {key} = {value}""")
+					WHERE {key} = {value};""")
 					attrs = set(res.fetchall())
 					right_sets.append(attrs)
 			con.close()
@@ -100,28 +97,49 @@ class SQLiteRepository(AbstractRepository[T]):
 				return list_of_objs
 				
 				
-				
-			
-		pass
 		
 
 	def update(self, obj: T) -> None:
 		""" Обновить данные об объекте. Объект должен содержать поле pk. """
-		pass
+		if obj.pk == 0:
+			raise ValueError("Trying to update object with unknown primary key")
+		names = list(self.fields.keys())
+		values = [getattr(obj, x) for x in self.fields]
+		with sqlite3.connect(self.db_file) as con:
+			cur = con.cursor()
+			for i in range(len(values)):
+				ex_name = names[i]
+				ex_val = values[i]
+				print(f"UPDATE {self.table_name} set {ex_name} = {ex_val} WHERE id == {obj.pk};")
+				cur.execute(f"UPDATE {self.table_name} SET {ex_name} = '{ex_val}' WHERE id == {obj.pk};")
+		con.commit()
+		con.close()
+				
+		
 			
 			
 
     	
 	def delete(self, pk: int) -> None:
 		""" Удалить запись """
-		pass
+		with sqlite3.connect(self.db_file) as con:
+			cur = con.cursor()
+			cur.execute(f"DELETE FROM {self.table_name} WHERE id = {pk};")
+		con.commit()
+		con.close()
+  
+  
+  
         
 r = SQLiteRepository('test.db', Test)
 o = Test('Hello')
 t = Test('Bye')
 r.add(o)
 r.add(t)
-print(r.get(1))
-print(r.get_all({'id': 1}))
-print(o.pk)
-print(t.pk)
+o.name = 'Changed Hello'
+r.update(o)
+r.delete(2)
+#print(r.get(1))
+#print(r.get_all({'id': 1}))
+#print(o.pk)
+#print(t.pk)
