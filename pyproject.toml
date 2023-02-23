@@ -19,6 +19,7 @@ mypy = "^0.991"
 pylint = "^2.15.10"
 flake8 = "^6.0.0"
 mccabe = "^0.7.0"
+pyside = "^6.4.2"
 
 [build-system]
 requires = ["poetry-core"]

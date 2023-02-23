@@ -40,6 +40,4 @@ class MemoryRepository(AbstractRepository[T]):
         self._container[obj.pk] = obj
 
     def delete(self, pk: int) -> None:
-        self._container.pop(pk)
-        
-        
+        self._container.pop(pk)      
