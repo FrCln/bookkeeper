@@ -43,8 +43,12 @@ class CommentMenu(QtWidgets.QDialog):
         self.but.clicked.connect(self.move_comm)
         self.but.clicked.connect(self.insert_parent_row)
         self.but.clicked.connect(self.get_to_add_row)
+        self.but.clicked.connect(self.add_amount_parent)
         self.but.clicked.connect(self.close)
         self.layout.addWidget(self.but)
+        
+    def add_amount_parent(self):
+        self.parent.add_amount()
         
     def move_comm(self):
         comm_text = self.comm_place.text()

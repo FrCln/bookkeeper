@@ -87,7 +87,7 @@ class BudgetTable(QtWidgets.QTableWidget):
         self.header.setSectionResizeMode(
             0, QtWidgets.QHeaderView.ResizeToContents)
         self.header.setSectionResizeMode(
-            1, QtWidgets.QHeaderView.ResizeToContents)
+            1, QtWidgets.QHeaderView.Stretch)
         self.setEditTriggers(
             QtWidgets.QAbstractItemView.NoEditTriggers)
         self.fill_begin_numbers()
@@ -106,6 +106,14 @@ class BudgetTable(QtWidgets.QTableWidget):
                 QtWidgets.QTableWidgetItem(str(0))
                 )
 
+    def add_spending(self, text):
+        amount = int(text)
+        for i in range(self.rowCount()):
+            cur_amount = int(self.item(i,0).text())
+            self.setItem(
+                i, 0,
+                QtWidgets.QTableWidgetItem(str(cur_amount + amount))
+                )
         
     	
     	
@@ -201,10 +209,7 @@ class MyMainWindow(QtWidgets.QMainWindow):
     
     def get_comment(self, comment):
         self.comment = comment
-        
-    #def fill_in_table(self):
-    #    self.table.fill_data(self.data)
-    
+   
     def insert_table_row(self):
         self.table.insert_row()
         
@@ -218,7 +223,10 @@ class MyMainWindow(QtWidgets.QMainWindow):
         row_data.append(self.comment)
         self.table.fill_row(row_data)
         
-    
+    def add_amount(self):
+        spending = self.red_field.get_sum()
+        self.budget_table.add_spending(spending)
+        
     def open_comment(self):
         comment = CommentMenu(self)
         comment.setWindowTitle("Добавление комментария")
