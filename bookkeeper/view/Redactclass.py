@@ -1,7 +1,8 @@
 import sys 
 
+from datetime import datetime
 from PySide6 import QtWidgets, QtCore, QtGui
-from redactmenu import RedactMenu
+from redactmenu import RedactMenu,CommentMenu
 
 
 class label_widget(QtWidgets.QWidget):
@@ -25,9 +26,10 @@ class MainTable(QtWidgets.QTableWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setColumnCount(4)
-        self.setRowCount(20)
+        self.setRowCount(1)
         self.setHorizontalHeaderLabels("Дата Сумма Категория Комментарий".split())
         self.setWindowTitle("Последние расходы")
+        self.cur_row = 0
         self.header = self.horizontalHeader()
         self.header.setSectionResizeMode(
             0, QtWidgets.QHeaderView.ResizeToContents)
@@ -37,6 +39,7 @@ class MainTable(QtWidgets.QTableWidget):
             2, QtWidgets.QHeaderView.ResizeToContents)
         self.header.setSectionResizeMode(
             3, QtWidgets.QHeaderView.Stretch)
+        
             
         self.setEditTriggers(
             QtWidgets.QAbstractItemView.NoEditTriggers)
@@ -49,7 +52,61 @@ class MainTable(QtWidgets.QTableWidget):
                     i, j, 
                     QtWidgets.QTableWidgetItem(x.capitalize())
                     )
+        self.cur_row += len(data)
+        
+    def fill_row(self, data:list[str]):
+        for j, element in enumerate(data):
+            self.setItem(
+                self.cur_row, j,
+                QtWidgets.QTableWidgetItem(element)
+                )
+        self.cur_row += 1
+        
+    def insert_row(self):
+        cond = True
+        row_count = self.rowCount()
+        column_count = self.columnCount()
+        for j in range(column_count):
+            if self.item(row_count, j) == True:
+                cond = False
+        if cond == True:
+            self.insertRow(row_count)
+        
+        
+        
+class BudgetTable(QtWidgets.QTableWidget):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setColumnCount(2)
+        self.setRowCount(3)   
+        self.setHorizontalHeaderLabels("Сумма Бюджет".split())
+        self.setVerticalHeaderLabels("День Неделя Месяц".split())
+        self.setWindowTitle("Бюджет")
+        self.cur_row = 0
+        self.header = self.horizontalHeader()
+        self.header.setSectionResizeMode(
+            0, QtWidgets.QHeaderView.ResizeToContents)
+        self.header.setSectionResizeMode(
+            1, QtWidgets.QHeaderView.ResizeToContents)
+        self.setEditTriggers(
+            QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.fill_begin_numbers()
             
+    def fill_begin_numbers(self):
+        budgets = [str(1000), str(7000), str(30000)]
+        for i in range(len(budgets)):
+            self.setItem(
+                i, 1, 
+                QtWidgets.QTableWidgetItem(budgets[i])
+                )
+        
+        for i in range(len(budgets)):
+            self.setItem(
+                i, 0, 
+                QtWidgets.QTableWidgetItem(str(0))
+                )
+
+        
     	
     	
     
@@ -58,6 +115,20 @@ class CatChoice(QtWidgets.QComboBox):
         super().__init__(*args,**kwargs)
         self.combo = QtWidgets.QComboBox()
         self.addItems(["Продукты", "Электроника", "Косметика", "Одежда", "Учеба"])
+        
+    def AddItem(self, name):
+        self.addItem(name)
+        
+    def get_cats(self):
+        AllItems = [self.itemText(i) for i in range(self.count())]
+        return AllItems
+    
+    def remove_category(self, text):
+        for i in range(self.count()):
+            if self.itemText(i) == text:
+                self.removeItem(i)
+                
+        
         
     
 class RedactField(QtWidgets.QWidget):
@@ -85,8 +156,6 @@ class RedactField(QtWidgets.QWidget):
         self.addbut = QtWidgets.QPushButton(text = "Добавить")
         self.layout.addWidget(self.addbut)
         
-    def print_sum(self):
-        print(self.sum_field.text())  
         
     def get_sum(self):
         return self.sum_field.text()
@@ -94,8 +163,11 @@ class RedactField(QtWidgets.QWidget):
     def is_filled(self):
         return bool(self.sum_field.text()) 
         
+    def get_category(self):
+        return self.combobox.currentText()
+        
        
-class MainWindow(QtWidgets.QMainWindow):
+class MyMainWindow(QtWidgets.QMainWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         #Данные
@@ -105,23 +177,52 @@ class MainWindow(QtWidgets.QMainWindow):
         #главный виджет
         self.main_widget = QtWidgets.QWidget()
         
-        #Таблица
+        #Таблица для внесения расходов
         self.table = MainTable()
-        
+        #Таблица для бюджета
+        self.budget_table = BudgetTable()
         #Окно редактирования
         self.red_field = RedactField() 
-        self.red_field.addbut.clicked.connect(self.fill_in_table)
+        self.red_field.addbut.clicked.connect(self.open_comment)
+        #self.red_field.addbut.clicked.connect(self.fill_in_table)
         self.red_field.redbut.clicked.connect(self.open_categ_menu)
         
         self.layout = QtWidgets.QVBoxLayout()
         self.layout.addWidget(self.table)
+        self.layout.addWidget(self.budget_table)
         self.layout.addWidget(self.red_field)
         self.main_widget.setLayout(self.layout)
         self.setCentralWidget(self.main_widget)
         self.setWindowTitle("The Bookkeeper App")
         
-    def fill_in_table(self):
-        self.table.fill_data(self.data)
+        
+    def add_category(self, name):
+        self.red_field.combobox.AddItem(name)
+    
+    def get_comment(self, comment):
+        self.comment = comment
+        
+    #def fill_in_table(self):
+    #    self.table.fill_data(self.data)
+    
+    def insert_table_row(self):
+        self.table.insert_row()
+        
+    def add_row(self):
+        row_data = []
+        now = datetime.now()
+        this_moment = now.strftime("%d/%m/%Y %H:%M:%S")
+        row_data.append(this_moment)
+        row_data.append(self.red_field.get_sum())
+        row_data.append(self.red_field.get_category())
+        row_data.append(self.comment)
+        self.table.fill_row(row_data)
+        
+    
+    def open_comment(self):
+        comment = CommentMenu(self)
+        comment.setWindowTitle("Добавление комментария")
+        comment.exec()
     
     def open_categ_menu(self):
         menu = RedactMenu(self)
@@ -132,7 +233,7 @@ class MainWindow(QtWidgets.QMainWindow):
 	
 app = QtWidgets.QApplication(sys.argv)
 
-window = MainWindow()
+window = MyMainWindow()
 """
 main_widget = QtWidgets.QWidget()
 window.setCentralWidget(main_widget)
