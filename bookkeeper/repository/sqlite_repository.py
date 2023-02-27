@@ -1,7 +1,7 @@
 """
 Модуль описывает репозиторий, работающий c базой данных через SQLite
 """
-
+import os
 import sqlite3
 import typing
 from typing import Any, Type, Optional, List
@@ -20,6 +20,10 @@ class SQLiteRepository(AbstractRepository[T]):
         self.table_name = cls.__name__.lower()
         self.fields = [f for f in cls.__annotations__.keys() if f != 'pk']
         self.cls = cls
+
+        if not os.path.exists(self.db_file):
+            conn = sqlite3.connect(self.db_file)
+            conn.close()
 
         with sqlite3.connect(self.db_file) as con:
             cur = con.cursor()
