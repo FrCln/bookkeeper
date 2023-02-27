@@ -120,7 +120,7 @@ class Category:
             # проверяем существует ли родительская категория
             parent_cats = repo.get_all({'name': parent})
             if len(parent_cats) == 0 and parent is not None:
-                raise ValueError(f"Parent category '{parent}' not found")
+                raise KeyError(f"Parent category '{parent}' not found")
             parent_cat = parent_cats[0] if parent_cats else None
             cat = cls(child, parent_cat.pk if parent_cat else None)
             repo.add(cat)
