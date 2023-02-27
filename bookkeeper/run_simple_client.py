@@ -1,10 +1,23 @@
+"""
+Функция для запуска sql_simple_client и simple_client
+Также содержит в себе категории
+"""
+
 from bookkeeper.models.category import Category
 from bookkeeper.models.expense import Expense
 from bookkeeper.utils import read_tree
 from bookkeeper.repository.abstract_repository import AbstractRepository
 
 
-def run_bookkeeper(cat_repo: AbstractRepository[Category], exp_repo: AbstractRepository[Expense]) -> None:
+def run_simple_client(cat_repo: AbstractRepository[Category],
+                      exp_repo: AbstractRepository[Expense]) \
+        -> None:
+
+    """
+    cats содержит в себе категории
+    далее описана логика работы терминала
+    """
+
     cats = '''
     продукты
         мясо
