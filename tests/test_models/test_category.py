@@ -106,3 +106,22 @@ def test_create_from_tree_error(repo):
     tree = [('1', 'parent'), ('parent', None)]
     with pytest.raises(KeyError):
         Category.create_from_tree(tree, repo)
+
+
+def test_create_from_tree_duplicate_cats(repo):
+    tree = [('parent', None), ('cat1', 'parent'), ('cat2', 'parent'), ('cat1', 'parent')]
+    cats = Category.create_from_tree(tree, repo)
+    assert len(cats) == 3
+
+
+def test_create_from_tree_top_level_cats(repo):
+    tree = [('cat1', None), ('cat2', None), ('cat3', None)]
+    cats = Category.create_from_tree(tree, repo)
+    assert len(cats) == 3
+    assert all(cat.parent is None for cat in cats)
+
+
+def test_create_from_tree_no_parent(repo):
+    tree = [('cat1', 'nonexistent_parent'), ('cat2', 'nonexistent_parent')]
+    with pytest.raises(KeyError):
+        Category.create_from_tree(tree, repo)
