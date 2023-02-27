@@ -112,7 +112,19 @@ class Category:
         """
         created: dict[str, Category] = {}
         for child, parent in tree:
-            cat = cls(child, created[parent].pk if parent is not None else None)
-            repo.add(cat)
-            created[child] = cat
+            # проверяет не существуют ли уже категории
+            if parent is not None:
+                parent_cat = repo.get_all({'name': parent})
+                if len(parent_cat) == 0:
+                    raise ValueError(f"Parent category '{parent}' not found")
+                parent_pk = parent_cat[0].pk
+            else:
+                parent_pk = None
+            existing_cat = repo.get_all({'name': child})
+            if len(existing_cat) > 0:
+                created[child] = existing_cat[0]
+            else:
+                cat = cls(child, parent_pk)
+                repo.add(cat)
+                created[child] = cat
         return list(created.values())
