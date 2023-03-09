@@ -2,7 +2,7 @@ import sys
 
 from datetime import datetime
 from PySide6 import QtWidgets, QtCore, QtGui
-from redactmenu import RedactMenu,CommentMenu
+from bookkeeper.view.redactmenu import RedactMenu,CommentMenu
 
 
 class label_widget(QtWidgets.QWidget):
@@ -25,9 +25,9 @@ def two_widgets_near(widgetone:QtWidgets.QLayout, widgettwo:QtWidgets.QWidget, p
 class MainTable(QtWidgets.QTableWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.setColumnCount(4)
+        self.setColumnCount(5)
         self.setRowCount(1)
-        self.setHorizontalHeaderLabels("Дата Сумма Категория Комментарий".split())
+        self.setHorizontalHeaderLabels(["Дата Добавления", "Сумма", "Категория", "Дата Расхода", "Комментарий"])
         self.setWindowTitle("Последние расходы")
         self.cur_row = 0
         self.header = self.horizontalHeader()
@@ -38,13 +38,16 @@ class MainTable(QtWidgets.QTableWidget):
         self.header.setSectionResizeMode(
             2, QtWidgets.QHeaderView.ResizeToContents)
         self.header.setSectionResizeMode(
-            3, QtWidgets.QHeaderView.Stretch)
+            3, QtWidgets.QHeaderView.ResizeToContents)
+        self.header.setSectionResizeMode(
+            4, QtWidgets.QHeaderView.Stretch)
         
             
         self.setEditTriggers(
             QtWidgets.QAbstractItemView.NoEditTriggers)
         self.verticalHeader().hide()
         
+        #Заполняет таблицу начальными расходами из базы
     def fill_data(self, data:list[list[str]]):
         for i, row in enumerate(data):
             for j, x in enumerate(row):
@@ -54,6 +57,7 @@ class MainTable(QtWidgets.QTableWidget):
                     )
         self.cur_row += len(data)
         
+        #Заполнение последнего ряда таблицы новым расходом
     def fill_row(self, data:list[str]):
         for j, element in enumerate(data):
             self.setItem(
@@ -62,6 +66,7 @@ class MainTable(QtWidgets.QTableWidget):
                 )
         self.cur_row += 1
         
+        #Добавления ряда к таблице в случае ее заполненности
     def insert_row(self):
         cond = True
         row_count = self.rowCount()
@@ -91,7 +96,8 @@ class BudgetTable(QtWidgets.QTableWidget):
         self.setEditTriggers(
             QtWidgets.QAbstractItemView.NoEditTriggers)
         self.fill_begin_numbers()
-            
+        
+        #Заполнение начальными данными о бюджете    
     def fill_begin_numbers(self):
         budgets = [str(1000), str(7000), str(30000)]
         for i in range(len(budgets)):
@@ -105,15 +111,17 @@ class BudgetTable(QtWidgets.QTableWidget):
                 i, 0, 
                 QtWidgets.QTableWidgetItem(str(0))
                 )
-
+                
+        #Добавление суммы расхода в таблицу бюджета
     def add_spending(self, text):
-        amount = int(text)
-        for i in range(self.rowCount()):
-            cur_amount = int(self.item(i,0).text())
-            self.setItem(
-                i, 0,
-                QtWidgets.QTableWidgetItem(str(cur_amount + amount))
-                )
+        if len(text) != 0:
+            amount = int(text)
+            for i in range(self.rowCount()):
+                cur_amount = int(self.item(i,0).text())
+                self.setItem(
+                    i, 0,
+                    QtWidgets.QTableWidgetItem(str(cur_amount + amount))
+                    )
         
     	
     	
@@ -122,15 +130,22 @@ class CatChoice(QtWidgets.QComboBox):
     def __init__(self, *args, **kwargs):
         super().__init__(*args,**kwargs)
         self.combo = QtWidgets.QComboBox()
-        self.addItems(["Продукты", "Электроника", "Косметика", "Одежда", "Учеба"])
+        #self.addItems(["Продукты", "Электроника", "Косметика", "Одежда", "Учеба"])
         
-    def AddItem(self, name):
+        #Добавление категории 
+    def AddItem(self, name:str):
         self.addItem(name)
         
+        #Установка изначального списка категорий
+    def set_cats_list(self, items:list):
+        self.addItems(items)
+        
+        #Получение категории из списка
     def get_cats(self):
         AllItems = [self.itemText(i) for i in range(self.count())]
         return AllItems
-    
+        
+        #Удаление категории из списка
     def remove_category(self, text):
         for i in range(self.count()):
             if self.itemText(i) == text:
@@ -164,13 +179,15 @@ class RedactField(QtWidgets.QWidget):
         self.addbut = QtWidgets.QPushButton(text = "Добавить")
         self.layout.addWidget(self.addbut)
         
-        
+        #Метод для получения введенной суммы
     def get_sum(self):
         return self.sum_field.text()
-            
+          
+          
     def is_filled(self):
         return bool(self.sum_field.text()) 
         
+        #Получение текущей категории в меню выбора
     def get_category(self):
         return self.combobox.currentText()
         
@@ -209,6 +226,9 @@ class MyMainWindow(QtWidgets.QMainWindow):
     
     def get_comment(self, comment):
         self.comment = comment
+        
+    def get_expdate(self, date):
+        self.date = date
    
     def insert_table_row(self):
         self.table.insert_row()
@@ -220,8 +240,12 @@ class MyMainWindow(QtWidgets.QMainWindow):
         row_data.append(this_moment)
         row_data.append(self.red_field.get_sum())
         row_data.append(self.red_field.get_category())
+        row_data.append(self.date)
         row_data.append(self.comment)
         self.table.fill_row(row_data)
+    
+    def set_categories(self, items:list):
+        self.red_field.combobox.set_cats_list(items)
         
     def add_amount(self):
         spending = self.red_field.get_sum()
@@ -239,9 +263,10 @@ class MyMainWindow(QtWidgets.QMainWindow):
         
         
 	
-app = QtWidgets.QApplication(sys.argv)
+#app = QtWidgets.QApplication(sys.argv)
 
-window = MyMainWindow()
+#window = MyMainWindow()
+#window.set_categories(["Rfjkjn", "jndknac"])
 """
 main_widget = QtWidgets.QWidget()
 window.setCentralWidget(main_widget)
@@ -259,5 +284,5 @@ print(redact_widget.combobox.height())
 print(redact_widget.combobox.geometry())
 print(redact_widget.redbut.width())
 """
-window.show()
-sys.exit(app.exec())
+#window.show()
+#sys.exit(app.exec())

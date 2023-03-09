@@ -110,6 +110,8 @@ class SQLiteRepository(AbstractRepository[T]):
         con.commit()
         con.close()
         
+
+        
 ''' 
 r = SQLiteRepository('test.db', Test)
 o = Test('Ivan', 'Moscow')

@@ -32,15 +32,25 @@ class CommentMenu(QtWidgets.QDialog):
         self.parent = parent
         self.layout = QtWidgets.QVBoxLayout()
         self.setLayout(self.layout)
-        self.mid_layout = QtWidgets.QHBoxLayout()
-        #Поле для внесения названия
-        self.label = QtWidgets.QLabel("Введите комментарий")
+        
+        #Поле для внесения комментария
+        self.mid_layout1 = QtWidgets.QHBoxLayout()
+        self.label_com = QtWidgets.QLabel("Введите комментарий")
         self.comm_place = QtWidgets.QLineEdit()
-        self.mid_layout.addWidget(self.label)
-        self.mid_layout.addWidget(self.comm_place)
-        self.layout.addLayout(self.mid_layout)
+        self.mid_layout1.addWidget(self.label_com)
+        self.mid_layout1.addWidget(self.comm_place)
+        
+        #Поле для внесения даты расхода
+        self.mid_layout2 = QtWidgets.QHBoxLayout()
+        self.label_date = QtWidgets.QLabel("Введите дату расхода")
+        self.date_place = QtWidgets.QLineEdit()
+        self.mid_layout2.addWidget(self.label_date)
+        self.mid_layout2.addWidget(self.date_place)
+        
+        self.layout.addLayout(self.mid_layout1)
+        self.layout.addLayout(self.mid_layout2)
         self.but = QtWidgets.QPushButton(text = "Добавить запись")
-        self.but.clicked.connect(self.move_comm)
+        self.but.clicked.connect(self.move_info)
         self.but.clicked.connect(self.insert_parent_row)
         self.but.clicked.connect(self.get_to_add_row)
         self.but.clicked.connect(self.add_amount_parent)
@@ -50,9 +60,11 @@ class CommentMenu(QtWidgets.QDialog):
     def add_amount_parent(self):
         self.parent.add_amount()
         
-    def move_comm(self):
+    def move_info(self):
         comm_text = self.comm_place.text()
+        exp_date = self.date_place.text()
         self.parent.get_comment(comm_text)
+        self.parent.get_expdate(exp_date)
         
     def insert_parent_row(self):
         self.parent.insert_table_row()   
