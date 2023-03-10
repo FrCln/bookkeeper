@@ -22,19 +22,19 @@ class MainWindow(QMainWindow):
 
         # виджет расходов
         expenses_list = ExpensesListWidget()
-        tab_widget.addTab(expenses_list, "Expenses")
+        tab_widget.addTab(expenses_list, "Список расходов")
 
         # виджет добавления расхода
         add_expense = AddExpenseWidget()
-        tab_widget.addTab(add_expense, "Add Expense")
+        tab_widget.addTab(add_expense, "Добавить расход")
 
         # виджет бюджета
         budget = BudgetWidget()
-        tab_widget.addTab(budget, "Budget")
+        tab_widget.addTab(budget, "Бюджет")
 
         # виджет категорий
         category = CategoryWidget()
-        tab_widget.addTab(category, "Categories")
+        tab_widget.addTab(category, "Категории")
 
         # виджет вкладок в качестве центрального виджета главного окна
         self.setCentralWidget(tab_widget)
