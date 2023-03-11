@@ -21,7 +21,8 @@ class Budget:
     pk: int = 0
 
     @classmethod
-    def create_for_current_month(cls, amount: float, repo: AbstractRepository['Budget'], comment: str = '')\
+    def create_for_current_month(cls, amount: float,
+                                 repo: AbstractRepository['Budget'], comment: str = '')\
             -> 'Budget':
         """
         Создать бюджет для текущего месяца, если его еще нет.

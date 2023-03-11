@@ -1,2 +1,4 @@
 [FORMAT]
 good-names=pk,i,x
+[MESSAGES CONTROL]
+extension-pkg-whitelist=PyQt6
