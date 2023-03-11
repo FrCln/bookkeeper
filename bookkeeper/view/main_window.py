@@ -1,9 +1,5 @@
-"""
-Этот код определяет класс MainWindow,
-который служит главным окном для виджетов
-"""
 import sys
-from PyQt6.QtWidgets import QApplication, QMainWindow, QTabWidget
+from PyQt6.QtWidgets import QMainWindow, QTabWidget
 from bookkeeper.view.expenses_list_widget import ExpensesListWidget
 from bookkeeper.view.budget_widget import BudgetWidget
 from bookkeeper.view.add_expense_widget import AddExpenseWidget
@@ -14,10 +10,12 @@ class MainWindow(QMainWindow):
     """
     Виджет для отображения главного окна.
     """
-    def __init__(self) -> None:
+
+    def __init__(self):
         super().__init__()
 
         # создаёт QTabWidget для хранения различных виджетов
+        self.expenses_list_widget = ExpensesListWidget()
         tab_widget = QTabWidget()
 
         # виджет расходов
@@ -38,10 +36,10 @@ class MainWindow(QMainWindow):
 
         # виджет вкладок в качестве центрального виджета главного окна
         self.setCentralWidget(tab_widget)
+        self.presenter = None
 
 
-# создаёт приложение и показывает главное окно
-app = QApplication(sys.argv)
-main_window = MainWindow()
-main_window.show()
-sys.exit(app.exec())
+
+    # заглушка
+def set_presenter(self, presenter):
+    self.presenter = presenter

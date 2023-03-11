@@ -61,7 +61,7 @@ def test_add_button_disabled_if_fields_empty(qtbot: QtBot, widget: AddExpenseWid
     assert add_button.isEnabled()
 
 
-# попробовать сделать так, чтобы во время тестов не выскакивали окна
+# TODO: попробовать сделать так, чтобы во время тестов не выскакивали окна
 
 def test_invalid_amount_warning_with_zero_value(qtbot):
     widget = AddExpenseWidget()
