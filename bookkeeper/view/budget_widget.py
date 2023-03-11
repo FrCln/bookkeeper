@@ -26,8 +26,8 @@ class BudgetWidget(QWidget):
         group_layout = QVBoxLayout()
 
         # для отображения текущего бюджета
-        self.budget_label = QLabel\
-            ("Текущий бюджет: \u20bd0.00")  # символ российского рубля! Z
+        self.budget_label = QLabel("Текущий бюджет: "
+                                   "\u20bd0.00")  # символ российского рубля! Z
         group_layout.addWidget(self.budget_label)
 
         # переключатели для выбора периода времени для бюджета
@@ -65,7 +65,7 @@ class BudgetWidget(QWidget):
         layout.addWidget(group_box)
         self.setLayout(layout)
 
-        # connect signals to update methods
+        # соединяем сигналы с методами обновления
         self.day_button.toggled.connect(self.update_budget_label)
         self.week_button.toggled.connect(self.update_budget_label)
         self.month_button.toggled.connect(self.update_budget_label)
@@ -75,7 +75,7 @@ class BudgetWidget(QWidget):
         """
         Метод для обработки нажатия кнопки "Применить"
         """
-        # здесь можно добавить логику для сохранения настроек бюджета
+        # здесь добавлю логику для сохранения настроек бюджета
         pass
 
     def update_budget_label(self) -> None:

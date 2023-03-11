@@ -25,9 +25,12 @@ class ExpensesListWidget(QWidget):
 
         # просто для примера
         self.expenses = [
-            {"date": "2023-03-01", "description": "Продукты", "category": "Еда", "amount": "3000.00"},
-            {"date": "2023-03-02", "description": "Питса", "category": "Еда", "amount": "700.00"},
-            {"date": "2023-03-03", "description": "Билеты на Чебурашку", "category": "Развлечения", "amount": "300.00"}
+            {"date": "2023-03-01", "description": "Продукты",
+                "category": "Еда", "amount": "3000.00"},
+            {"date": "2023-03-02", "description": "Питса",
+                "category": "Еда", "amount": "700.00"},
+            {"date": "2023-03-03", "description": "Билеты на Чебурашку",
+                "category": "Развлечения", "amount": "300.00"}
         ]
 
         self.table = QTableWidget()
