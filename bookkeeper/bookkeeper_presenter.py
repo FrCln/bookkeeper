@@ -37,6 +37,7 @@ class Presenter:
         self.main_window.expenses_list_widget.category_cell_double_clicked.connect(
             self._on_category_cell_double_clicked)
         self.main_window.expenses_list_widget.category_cell_changed.connect(self._on_category_cell_changed)
+        self.main_window.expenses_list_widget.expense_cell_changed.connect(self.update_expense)
 
         # обновление таблицы
         self.update_expenses_list()
@@ -142,3 +143,20 @@ class Presenter:
             self.update_expenses_list()
         except Exception as e:
             print(f"Ошибка add_expense: {e}")
+
+    def update_expense(self, row: int, column: int, new_value: str) -> None:
+        objects = self.exp_repo.get_all()
+        expenses = [expense for expense in objects if isinstance(expense, Expense)]
+        expense = expenses[row]
+        if column == 1:
+            expense.amount = int(new_value)
+        elif column == 2:
+            expense.expense_date = datetime.strptime(new_value, '%Y-%m-%d').strftime('%Y-%m-%d %H:%M:%S.%f')
+        elif column == 3:
+            expense.comment = new_value
+        try:
+            self.exp_repo.update(expense)
+            self.update_expenses_list()
+        except Exception as e:
+            print(f"Ошибка update_expense: {e}")
+

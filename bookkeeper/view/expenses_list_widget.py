@@ -2,6 +2,7 @@
 Модуль содержит класс виджета расходов
 для отображения информации о расходах таблицей.
 """
+from datetime import datetime
 from typing import cast, List, Dict, Tuple
 
 from PyQt6.QtCore import pyqtSignal, Qt
@@ -13,7 +14,7 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QAbstractItemView,
     QHBoxLayout,
-    QPushButton, QComboBox,
+    QPushButton, QComboBox, QInputDialog, QMessageBox,
 )
 
 
@@ -25,6 +26,7 @@ class ExpensesListWidget(QWidget):
     delete_button_clicked = pyqtSignal(int)
     category_cell_double_clicked = pyqtSignal(int, int, str)
     category_cell_changed = pyqtSignal(int, int, int)
+    expense_cell_changed = pyqtSignal(int, int, str)
 
     def __init__(self) -> None:
         super().__init__()
@@ -65,43 +67,51 @@ class ExpensesListWidget(QWidget):
         self.table.horizontalHeader().setSectionResizeMode(
             QHeaderView.ResizeMode.ResizeToContents)
 
-        self.table.setEditTriggers(QAbstractItemView.EditTrigger.DoubleClicked)
+        for row in range(self.table.rowCount()):
+            for col in range(self.table.columnCount()):
+                if col == 0:
+                    self.table.item(row, col).setFlags(
+                        Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
+                else:
+                    self.table.item(row, col).setFlags(
+                        Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
 
     def update_table(self, expenses: List[Dict[str, str]]) -> None:
         """
         Обновляет содержимое таблицы
         на основе данных из репозитория.
         """
+        self.table.clearContents()
         self.table.setRowCount(len(expenses))
         for row, expense in enumerate(expenses):
-            category_item = self.table.item(row, 0)
-            amount_item = self.table.item(row, 1)
-            date_item = self.table.item(row, 2)
-            description_item = self.table.item(row, 3)
-            delete_button = self.table.cellWidget(row, 4)
-            if not all((date_item, description_item, category_item, amount_item, delete_button)):
-                # делаю формат даты более знакомым
-                date_str = expense["date"]
-                day, month, year = date_str.split("-")
-                date_formatted = f"{year}/{month}/{day}"
+            category_item = QTableWidgetItem(expense["category"])
+            amount_item = QTableWidgetItem(str(expense["amount"]))
+            date_item = QTableWidgetItem(expense["date"])
+            description_item = QTableWidgetItem(expense["description"])
+            delete_button = QPushButton("Удалить")
+            delete_button.clicked.connect(self.delete_row)
 
-                category_item = QTableWidgetItem(expense["category"])
-                amount_item = QTableWidgetItem(str(expense["amount"]))
-                date_item = QTableWidgetItem(date_formatted)
-                description_item = QTableWidgetItem(expense["description"])
-
-                delete_button = QPushButton("Удалить")
-                delete_button.clicked.connect(self.delete_row)
-
-                self.table.setItem(row, 0, category_item)
-                self.table.setItem(row, 1, amount_item)
-                self.table.setItem(row, 2, date_item)
-                self.table.setItem(row, 3, description_item)
-                self.table.setCellWidget(row, 4, delete_button)
-                self.table.setEditTriggers(QAbstractItemView.EditTrigger.DoubleClicked)
+            self.table.setItem(row, 0, category_item)
+            self.table.setItem(row, 1, amount_item)
+            self.table.setItem(row, 2, date_item)
+            self.table.setItem(row, 3, description_item)
+            self.table.setCellWidget(row, 4, delete_button)
 
     def _on_cell_double_clicked(self, row: int, column: int) -> None:
-        if column == 0:
+        if column in (1, 2, 3):
+            item = self.table.item(row, column)
+            new_value, ok = QInputDialog.getText(self, "Изменение значения", "Введите новое значение:",
+                                                 text=item.text())
+            if ok:
+                try:
+                    datetime.strptime(new_value, "%Y-%m-%d")
+                except ValueError:
+                    QMessageBox.warning(self, "Ошибка ввода даты",
+                                        "Введите дату в формате YYYY-MM-DD")
+                else:
+                    self.expense_cell_changed.emit(row, column, new_value)
+
+        elif column == 0:
             item = self.table.item(row, column)
             self.category_cell_double_clicked.emit(row, column, item.text())
 
@@ -146,3 +156,15 @@ class ExpensesListWidget(QWidget):
         заглушка
         """
         pass
+
+
+class EditableTableWidgetItem(QTableWidgetItem):
+    """
+    A QTableWidgetItem that allows editing.
+    """
+
+    def __init__(self, text):
+        super().__init__(text)
+
+    def flags(self):
+        return super().flags() | Qt.ItemFlag.ItemIsEditable
