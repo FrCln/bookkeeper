@@ -41,6 +41,9 @@ class Presenter:
             self._on_category_cell_double_clicked)
         self.main_window.expenses_list_widget.category_cell_changed.connect(self._on_category_cell_changed)
         self.main_window.expenses_list_widget.expense_cell_changed.connect(self.update_expense)
+        self.main_window.category_widget.category_name_edited.connect(self.update_category_name)
+        self.main_window.category_widget.delete_button.clicked.connect(
+            lambda: self.delete_category(self.main_window.category_widget.list.currentItem().text()))
 
         # обновление таблицы расходов и категорий
         self.update_expenses_list()
@@ -166,3 +169,61 @@ class Presenter:
         except Exception as e:
             print(f"Ошибка update_expense: {e}")
 
+    def update_category_name(self, old_name: str, new_name: str):
+        """
+        Обновляет имя категории в репозитории категорий.
+        """
+        try:
+            # Получаем список всех категорий из репозитория
+            categories = self.cat_repo.get_all()
+
+            # Ищем категорию с нужным именем и получаем ее pk
+            category_pk = None
+            for category in categories:
+                if category.name == old_name:
+                    category_pk = category.pk
+                    break
+
+            if category_pk is None:
+                QMessageBox.critical(None, 'Ошибка', f'Категория "{old_name}" не найдена.')
+                return
+
+            # Создаем экземпляр Category с новым именем и старым pk и parent
+            old_category = self.cat_repo.get(category_pk)
+            new_category = Category(name=new_name, pk=old_category.pk, parent=old_category.parent)
+            self.cat_repo.update(new_category)
+        except Exception as e:
+            print(f"Ошибка update_category_name: {e}")
+        # обновление таблицы расходов и категорий
+        self.update_expenses_list()
+        self.update_category_list()
+
+    def delete_category(self, category_name: str):
+        pass
+        """
+        Удаляет категорию из репозитория категорий и
+        обновляет таблицу расходов и список категорий.
+        """
+        print(category_name)
+        try:
+            # Получаем список всех категорий из репозитория
+            categories = self.cat_repo.get_all()
+
+            # Ищем категорию с нужным именем и получаем её pk
+            category_pk = None
+            for category in categories:
+                if category.name == category_name:
+                    category_pk = category.pk
+                    break
+
+            if category_pk is None:
+                QMessageBox.critical(None, 'Ошибка', f'Категория "{category_name}" не найдена.')
+                return
+
+            self.cat_repo.delete(category_pk)
+
+            # обновление таблицы расходов и категорий
+            self.update_expenses_list()
+            self.update_category_list()
+        except Exception as e:
+            print(f"Ошибка delete_category: {e}")

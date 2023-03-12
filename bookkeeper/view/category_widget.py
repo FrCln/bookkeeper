@@ -3,6 +3,7 @@
 """
 from typing import List
 
+from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import (
     QListWidget,
     QListWidgetItem,
@@ -14,10 +15,15 @@ from PyQt6.QtWidgets import (
 )
 
 
+class Signal:
+    pass
+
+
 class CategoryWidget(QWidget):
     """
     Виджет для отображения списка категорий.
     """
+    category_name_edited = pyqtSignal(str, str)
 
     def __init__(self) -> None:
         super().__init__()
@@ -101,16 +107,20 @@ class CategoryWidget(QWidget):
         Заменяет старый текст элемента списка новым текстом,
         введенным в виджете редактирования строк.
         """
-        # получаем новый текст из line edit
+        # получаем новое имя категории
         new_text = line_edit.text()
 
-        # заменяем элемент списка на новый текст
-        index = self.list.row(item)
-        self.list.takeItem(index)
-        self.list.insertItem(index, new_text)
+        # получаем старое имя категории
+        old_text = item.text()
 
-        # удаляем line edit
-        line_edit.deleteLater()
+        # удаляем редактирующийся элемент
+        self.list.removeItemWidget(item)
+
+        # обновляем элемент списка
+        item.setText(new_text)
+
+        # эмитируем сигнал, что имя категории изменилось
+        self.category_name_edited.emit(old_text, new_text)
 
     def on_item_double_clicked(self, item: QListWidgetItem) -> None:
         """
