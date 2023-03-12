@@ -6,6 +6,7 @@ import sqlite3
 from typing import Any
 from inspect import get_annotations
 from bookkeeper.repository.abstract_repository import AbstractRepository, T
+from datetime import datetime
 
 
 def gettype(attr: Any) -> str:
@@ -17,8 +18,12 @@ def gettype(attr: Any) -> str:
     Returns:
         str: _description_
     """
-    if isinstance(attr, int):
+    if isinstance(attr, int | None):
         return 'INTEGER'
+    if isinstance(attr, float):
+        return 'REAL'
+    if isinstance(attr, datetime):
+        return 'timestamp'
     return 'TEXT'
 
 
@@ -122,7 +127,7 @@ class SQLiteRepository(AbstractRepository[T]):
 
     def get(self, pk: int) -> T | None:
         """ Получить объект по id """
-        with sqlite3.connect(self.db_file) as con:
+        with sqlite3.connect(self.db_file, detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES) as con:
             query = f'SELECT * FROM {self.table_name} WHERE id = {pk}'
             result = con.cursor().execute(query).fetchone()
             if result is None:
@@ -146,7 +151,7 @@ class SQLiteRepository(AbstractRepository[T]):
                 condition += f' {key} = {adddecor(val)} AND'
             query += condition.rsplit(' ', 1)[0]
 
-        with sqlite3.connect(self.db_file) as con:
+        with sqlite3.connect(self.db_file, detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES) as con:
             results = con.cursor().execute(query).fetchall()
             objs = [self.fill_object(result) for result in results]
 
@@ -155,15 +160,16 @@ class SQLiteRepository(AbstractRepository[T]):
 
     def update(self, obj: T) -> None:
         """ Обновить данные об объекте. Объект должен содержать поле pk. """
-        values = [adddecor(getattr(obj, x)) for x in self.fields]
-        setter = [f'{col} = {val}' for col, val in zip(self.fields, values)]
+        values = [getattr(obj, x) for x in self.fields]
+        setter = [f'{col} = ?' for col in self.fields]
         upd_stm = ', '.join(setter)
 
+        value_tuple = tuple(values)
         with sqlite3.connect(self.db_file) as con:
             if not self.is_pk_in_db(con.cursor(), obj.pk):
                 raise ValueError(f'No object with id={obj.pk} in DB.')
             query = f'UPDATE {self.table_name} SET {upd_stm} WHERE id = {obj.pk}'
-            con.cursor().execute(query)
+            con.cursor().execute(query, value_tuple)
         con.close()
 
     def delete(self, pk: int) -> None:

@@ -3,14 +3,9 @@ Widget of editing pane
 """
 
 from PySide6 import QtWidgets
-from PySide6.QtWidgets import (QWidget, QComboBox)
+from PySide6.QtWidgets import (QWidget)
 
 from .edit_ctg_window import EditCtgWindow
-
-
-def set_data(box: QComboBox, cats: list[str]) -> None:
-    for cat in cats:
-        box.addItem(cat)
 
 
 class EditWidget(QWidget):
@@ -21,32 +16,31 @@ class EditWidget(QWidget):
         message = QtWidgets.QLabel("Редактирование")
         layout.addWidget(message)
 
+        edit_widget = QWidget()
+
+        split_layout = QtWidgets.QHBoxLayout()
+
         sum_label = QtWidgets.QLabel("Сумма")
-        cat_label = QtWidgets.QLabel("Категория")
         add_button = QtWidgets.QPushButton("Добавить")
-        cat_edit_button = QtWidgets.QPushButton("Редактировать")
         sum_line = QtWidgets.QLineEdit("0")
-        cats_box = QtWidgets.QComboBox()
-        glayout = QtWidgets.QGridLayout()
 
-        glayout.addWidget(sum_label, 0, 0)
-        glayout.addWidget(sum_line, 0, 1)
-        glayout.addWidget(cat_label, 1, 0)
-        glayout.addWidget(cats_box, 1, 1)
-        glayout.addWidget(cat_edit_button, 1, 2)
-        glayout.addWidget(add_button, 2, 1)
-        gwidget = QWidget()
-        gwidget.setLayout(glayout)
-        layout.addWidget(gwidget)
+        sum_widget = QWidget()
+        sum_layout = QtWidgets.QHBoxLayout()
+        sum_layout.addWidget(sum_label)
+        sum_layout.addWidget(sum_line)
+        sum_widget.setLayout(sum_layout)
 
-        self.cat_list = ["Продукты", "Книги"]
-        set_data(cats_box, self.cat_list)
-        
-        cat_edit_button.clicked.connect(self.open_window)
+        adding_widget = QWidget()
+        adding_layout = QtWidgets.QVBoxLayout()
+        adding_layout.addWidget(sum_widget)
+        adding_layout.addWidget(add_button)
+        adding_widget.setLayout(adding_layout)
+
+        edit_ctg_widget = EditCtgWindow([])
+        split_layout.addWidget(adding_widget)
+        split_layout.addWidget(edit_ctg_widget)
+
+        edit_widget.setLayout(split_layout)
+        layout.addWidget(edit_widget)
 
         self.setLayout(layout)
-    
-    def open_window(self):
-        self.edit_ctg = EditCtgWindow(self.cat_list)
-        self.edit_ctg.show()
-
