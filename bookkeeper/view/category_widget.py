@@ -24,6 +24,7 @@ class CategoryWidget(QWidget):
     Виджет для отображения списка категорий.
     """
     category_name_edited = pyqtSignal(str, str)
+    delete_category_signal = pyqtSignal(str)
 
     def __init__(self) -> None:
         super().__init__()
@@ -76,8 +77,19 @@ class CategoryWidget(QWidget):
         Инициализирует список, на котором будут
         отображаться данные о категориях.
         """
-        # заполняет список данными категорий
-        self.list.addItems(categories)
+        self.list.clear()
+
+        # сортирует категории по алфавиту
+        categories = sorted(categories)
+
+        # проверяет существование категория "Удалено"
+        if "Deleted" in categories:
+            categories.remove("Deleted")
+            categories.append("Deleted")
+
+        for category_name in categories:
+            item = QListWidgetItem(category_name)
+            self.list.addItem(item)
 
     def on_add_button_clicked(self) -> None:
         """
@@ -99,6 +111,8 @@ class CategoryWidget(QWidget):
         """
         selected_items = self.list.selectedItems()
         for item in selected_items:
+            category_name = item.text()
+            self.delete_category_signal.emit(category_name)
             self.list.takeItem(self.list.row(item))
 
     def on_editing_finished(self, line_edit: QLineEdit,

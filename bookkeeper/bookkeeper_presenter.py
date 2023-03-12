@@ -42,8 +42,8 @@ class Presenter:
         self.main_window.expenses_list_widget.category_cell_changed.connect(self._on_category_cell_changed)
         self.main_window.expenses_list_widget.expense_cell_changed.connect(self.update_expense)
         self.main_window.category_widget.category_name_edited.connect(self.update_category_name)
-        self.main_window.category_widget.delete_button.clicked.connect(
-            lambda: self.delete_category(self.main_window.category_widget.list.currentItem().text()))
+        self.main_window.category_widget.delete_category_signal.connect(self.delete_category)
+
 
         # обновление таблицы расходов и категорий
         self.update_expenses_list()
@@ -217,7 +217,6 @@ class Presenter:
         self.update_category_list()
 
     def delete_category(self, category_name: str):
-        pass
         """
         Удаляет категорию из репозитория категорий и
         обновляет таблицу расходов и список категорий.
