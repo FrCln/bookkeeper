@@ -23,3 +23,9 @@ class Expense:
     added_date: datetime = field(default_factory=datetime.now)
     comment: str = ''
     pk: int = 0
+    #def __init__(self, amount, category, expense_date, comment):
+    #    self.amount = amount
+    #    self.category = category
+    #    self.expense_date = expense_date
+    #    self.comment = comment
+        

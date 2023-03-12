@@ -50,10 +50,12 @@ class MainTable(QtWidgets.QTableWidget):
         #Заполняет таблицу начальными расходами из базы
     def fill_data(self, data:list[list[str]]):
         for i, row in enumerate(data):
+            if i >= self.rowCount():
+                self.insert_row()
             for j, x in enumerate(row):
                 self.setItem(
                     i, j, 
-                    QtWidgets.QTableWidgetItem(x.capitalize())
+                    QtWidgets.QTableWidgetItem(x)
                     )
         self.cur_row += len(data)
         
@@ -233,6 +235,9 @@ class MyMainWindow(QtWidgets.QMainWindow):
     def insert_table_row(self):
         self.table.insert_row()
         
+    def fill_table_data(self, data:list[list[str]]):
+        self.table.fill_data(data)
+        
     def add_row(self):
         row_data = []
         now = datetime.now()
@@ -250,6 +255,9 @@ class MyMainWindow(QtWidgets.QMainWindow):
     def add_amount(self):
         spending = self.red_field.get_sum()
         self.budget_table.add_spending(spending)
+        
+    def add_given_amount(self, sum_of_spendings):
+        self.budget_table.add_spending(sum_of_spendings)
         
     def open_comment(self):
         comment = CommentMenu(self)

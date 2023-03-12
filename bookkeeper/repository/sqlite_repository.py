@@ -1,6 +1,8 @@
 '''Sqlite for working with database'''
 import sqlite3
 from typing import Any
+from datetime import datetime
+from bookkeeper.models.expense import Expense
 from inspect import get_annotations
 from bookkeeper.repository.abstract_repository import AbstractRepository, T
 
@@ -111,6 +113,29 @@ class SQLiteRepository(AbstractRepository[T]):
         con.close()
         
 
+class ExpenseRepository(SQLiteRepository):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+    def add(self, obj: T) -> int:
+        if getattr(obj, 'pk', None) != 0:
+            raise ValueError(f'trying to add object {obj} with filled `pk` attribute')
+        now = datetime.now()
+        now_str = now.strftime("%d/%m/%Y %H:%M:%S")
+        obj.added_date = now_str
+        names = ', '.join(self.fields.keys())
+        places = ', '.join("?" * len(self.fields))
+        values = [getattr(obj, x) for x in self.fields]
+        with sqlite3.connect(self.db_file) as con:
+            cur = con.cursor()
+            cur.execute('PRAGMA foreign_keys = ON;')
+            cur.execute(f"INSERT INTO {self.table_name} ({names}) VALUES ({places});", values)
+            con.commit()
+            if cur.lastrowid is not None:
+                obj.pk = cur.lastrowid
+    
+    
+    
         
 ''' 
 r = SQLiteRepository('test.db', Test)
