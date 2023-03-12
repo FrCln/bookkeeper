@@ -17,8 +17,8 @@ class Expense:
     comment - комментарий
     pk - id записи в базе данных
     """
-    amount: int
-    category: int
+    amount: int = 0
+    category: int = 0
     expense_date: datetime = field(default_factory=datetime.now)
     added_date: datetime = field(default_factory=datetime.now)
     comment: str = ''

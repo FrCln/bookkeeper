@@ -15,7 +15,7 @@ class Category:
     родителя (категория, подкатегорией которой является данная) в атрибуте parent.
     У категорий верхнего уровня parent = None
     """
-    name: str
+    name: str = ""
     parent: int | None = None
     pk: int = 0
 
