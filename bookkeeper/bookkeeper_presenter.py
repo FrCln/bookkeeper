@@ -28,8 +28,11 @@ class Presenter:
     def show_main_window(self):
         self.main_window = MainWindow()
 
-        # инициализирует таблицу
+        # инициализирует таблицу расходов
         self.init_table()
+
+        # инициализирует список категорий
+        self.init_category()
 
         # соединяем сигналы
         self.main_window.expenses_list_widget.delete_button_clicked.connect(self.delete_expense)
@@ -39,7 +42,7 @@ class Presenter:
         self.main_window.expenses_list_widget.category_cell_changed.connect(self._on_category_cell_changed)
         self.main_window.expenses_list_widget.expense_cell_changed.connect(self.update_expense)
 
-        # обновление таблицы
+        # обновление таблицы расходов и категорий
         self.update_expenses_list()
         self.update_category_list()
 
@@ -47,6 +50,11 @@ class Presenter:
 
     def init_table(self) -> None:
         self.main_window.expenses_list_widget.init_table()
+
+    def init_category(self) -> None:
+        categories = [category.name for category in self.cat_repo.get_all()]
+        self.main_window.category_widget.list.clear()
+        self.main_window.category_widget.init_category_list(categories)
 
     def update_expenses_list(self) -> None:
         """
@@ -73,7 +81,6 @@ class Presenter:
         """
         Удаляет расход из базы данных и обновляет содержимое таблицы.
         """
-        print(f"delete_expense called with index={index}")
         try:
             objects = self.exp_repo.get_all()
             expenses = [expense for expense in objects if isinstance(expense, Expense)]
@@ -85,12 +92,12 @@ class Presenter:
 
     def update_category_list(self) -> None:
         """
-        Обновляет содержимое списка категорий на основе данных из репозитория.
+        Обновляет содержимое списка категорий в комбобоксе виджета добавления расхода
+        на основе данных из репозитория.
         """
         categories = self.cat_repo.get_all()
         categories_list = [(category.pk, category.name) for category in categories]
         self.main_window.add_expense_widget.set_categories(categories_list)
-        print(categories_list, "update_category_list")
 
     def _on_category_cell_double_clicked(self, row: int, column: int, category_name: str) -> None:
         categories = self.cat_repo.get_all()
@@ -98,7 +105,6 @@ class Presenter:
         self.main_window.expenses_list_widget._update_category_cell(row, column, categories)
 
     def _on_category_cell_changed(self, row: int, column: int, category_id: int) -> None:
-        print(category_id)
         expense_id = self.exp_repo.get_all()[row].pk
         expense = self.exp_repo.get(expense_id)
         category = self.cat_repo.get(category_id)

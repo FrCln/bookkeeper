@@ -1,6 +1,8 @@
 """
 Модуль содержит класс виджета категорий для отображения информации о категориях списком.
 """
+from typing import List
+
 from PyQt6.QtWidgets import (
     QListWidget,
     QListWidgetItem,
@@ -20,15 +22,6 @@ class CategoryWidget(QWidget):
     def __init__(self) -> None:
         super().__init__()
 
-        # просто для примера
-        self.categories = [
-            "Еда",
-            "Транспорт",
-            "Развлечения",
-            "Дом",
-            "Другое"
-        ]
-
         self.setup_ui()
 
     def setup_ui(self) -> None:
@@ -37,9 +30,6 @@ class CategoryWidget(QWidget):
         """
         # создаёт QListWidget для отображения списка категорий
         self.list = QListWidget()
-
-        # заполняет список данными категорий
-        self.list.addItems(self.categories)
 
         # line для редактирования имени категории
         self.name_edit = QLineEdit()
@@ -74,6 +64,14 @@ class CategoryWidget(QWidget):
 
         # отключает кнопку добавления
         self.add_button.setEnabled(False)
+
+    def init_category_list(self, categories: List[str]) -> None:
+        """
+        Инициализирует список, на котором будут
+        отображаться данные о категориях.
+        """
+        # заполняет список данными категорий
+        self.list.addItems(categories)
 
     def on_add_button_clicked(self) -> None:
         """

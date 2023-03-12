@@ -21,8 +21,8 @@ class MainWindow(QMainWindow):
         tab_widget.addTab(budget, "Бюджет")
 
         # виджет категорий
-        category = CategoryWidget()
-        tab_widget.addTab(category, "Категории")
+        self.category_widget = CategoryWidget()
+        tab_widget.addTab(self.category_widget, "Категории")
 
         # виджет расходов
         self.expenses_list_widget = ExpensesListWidget()
