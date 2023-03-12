@@ -64,13 +64,30 @@ class Presenter:
         Обновляет содержимое таблицы расходов
         на основе данных из репозитория.
         """
-
+        """
+        Обновляет содержимое таблицы расходов
+        на основе данных из репозитория.
+        """
         objects = self.exp_repo.get_all()
         expenses = [expense for expense in objects if isinstance(expense, Expense)]
         expenses_dict = []
+        categories_dict = {}
+
         # сопоставляем объекты Expense со словарём в виджете
         for expense in expenses:
-            category = self.cat_repo.get(expense.category)
+            category = categories_dict.get(expense.category)
+            if category is None:
+                category = self.cat_repo.get(expense.category)
+                if category is None:
+                    # cоздаём новую "Удалено" категорию, если категория не найдена
+                    category = Category(name="Удалено")
+                    self.cat_repo.add(category)
+                    categories_dict[expense.category] = category
+                    expense.category = category.pk
+                    self.exp_repo.update(expense)
+                else:
+                    categories_dict[expense.category] = category
+
             expense_dict = {
                 "date": datetime.strptime(expense.expense_date, "%Y-%m-%d %H:%M:%S.%f").strftime("%Y-%m-%d"),
                 "description": expense.comment,
@@ -78,6 +95,7 @@ class Presenter:
                 "amount": str(expense.amount)
             }
             expenses_dict.append(expense_dict)
+
         self.main_window.expenses_list_widget.update_table(expenses_dict)
 
     def delete_expense(self, index: int) -> None:
