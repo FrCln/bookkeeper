@@ -18,14 +18,12 @@ from bookkeeper.view.main_window import MainWindow
 
 
 def main():
-    # Choose a repository
+    # указываем репозиторий
     exp_repo = SQLiteRepository('budget.db', Expense)
     cat_repo = SQLiteRepository('budget.db', Category)
 
-    # Create the presenter
     presenter = Presenter(exp_repo, cat_repo)
 
-    # Create the application and show the main window
     app = QApplication(sys.argv)
     presenter.show_main_window()
     sys.exit(app.exec())

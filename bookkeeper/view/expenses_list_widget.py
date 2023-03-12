@@ -23,6 +23,7 @@ class ExpensesListWidget(QWidget):
     """
 
     delete_button_clicked = pyqtSignal(int)
+
     def __init__(self) -> None:
         super().__init__()
 
@@ -118,7 +119,6 @@ class ExpensesListWidget(QWidget):
         Удаляет строку с выбранным расходом из списка расходов
         и обновляет содержимое таблицы.
         """
-        print("Delete row method called")
         delete_button: QPushButton = cast(QPushButton, self.sender())
         index: int = self.table.indexAt(delete_button.pos()).row()
         print(index)
