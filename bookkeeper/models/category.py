@@ -5,7 +5,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from typing import Iterator
 
-from ..repository.abstract_repository import AbstractRepository
+from bookkeeper.repository.abstract_repository import AbstractRepository
 
 
 @dataclass

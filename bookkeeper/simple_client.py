@@ -20,7 +20,7 @@ cats = '''
 одежда
 '''.splitlines()
 
-#Category.create_from_tree(read_tree(cats), cat_repo)
+Category.create_from_tree(read_tree(cats), cat_repo)
 
 while True:
     try:
@@ -43,6 +43,3 @@ while True:
         exp = Expense(int(amount), cat.pk)
         exp_repo.add(exp)
         print(exp)
-
-#cat_repo.delete_all()
-#exp_repo.delete_all()

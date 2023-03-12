@@ -2,23 +2,17 @@
 Модуль описывает репозиторий, работающий с sqlite
 """
 
-import sqlite3
 from typing import Any
-from inspect import get_annotations
-from bookkeeper.repository.abstract_repository import AbstractRepository, T
 from datetime import datetime
+from inspect import get_annotations
+import sqlite3
+from bookkeeper.repository.abstract_repository import AbstractRepository, T
 
 
 def gettype(attr: Any) -> str:
-    """_summary_
-
-    Args:
-        attr (Any): _description_
-
-    Returns:
-        str: _description_
+    """Returns type annotation for DB.
     """
-    if isinstance(attr, int | None):
+    if isinstance(attr, int) or attr is None:
         return 'INTEGER'
     if isinstance(attr, float):
         return 'REAL'
@@ -28,13 +22,7 @@ def gettype(attr: Any) -> str:
 
 
 def adddecor(value: str | int) -> str | int:
-    """_summary_
-
-    Args:
-        attr (Any): _description_
-
-    Returns:
-        str | int: _description_
+    """Sets decoration to string value.
     """
     if isinstance(value, str):
         return f'\'{value}\''
@@ -42,10 +30,7 @@ def adddecor(value: str | int) -> str | int:
 
 
 class SQLiteRepository(AbstractRepository[T]):
-    """_summary_
-
-    Args:
-        AbstractRepository (_type_): _description_
+    """SQL db repository.
     """
 
     def __init__(self, db_file: str, cls: type) -> None:
@@ -127,7 +112,9 @@ class SQLiteRepository(AbstractRepository[T]):
 
     def get(self, pk: int) -> T | None:
         """ Получить объект по id """
-        with sqlite3.connect(self.db_file, detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES) as con:
+        with sqlite3.connect(
+                self.db_file,
+                detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES) as con:
             query = f'SELECT * FROM {self.table_name} WHERE id = {pk}'
             result = con.cursor().execute(query).fetchone()
             if result is None:
@@ -151,7 +138,9 @@ class SQLiteRepository(AbstractRepository[T]):
                 condition += f' {key} = {adddecor(val)} AND'
             query += condition.rsplit(' ', 1)[0]
 
-        with sqlite3.connect(self.db_file, detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES) as con:
+        with sqlite3.connect(
+                self.db_file,
+                detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES) as con:
             results = con.cursor().execute(query).fetchall()
             objs = [self.fill_object(result) for result in results]
 
