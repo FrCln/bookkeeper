@@ -1,6 +1,8 @@
 from datetime import datetime
 from typing import List
 
+from PyQt6.QtWidgets import QMessageBox
+
 from bookkeeper.models.budget import Budget
 from bookkeeper.models.category import Category
 from bookkeeper.models.expense import Expense
@@ -32,6 +34,9 @@ class Presenter:
         # соединяем сигналы
         self.main_window.expenses_list_widget.delete_button_clicked.connect(self.delete_expense)
         self.main_window.add_expense_widget.expense_added.connect(self.add_expense)
+        self.main_window.expenses_list_widget.category_cell_double_clicked.connect(
+            self._on_category_cell_double_clicked)
+        self.main_window.expenses_list_widget.category_cell_changed.connect(self._on_category_cell_changed)
 
         # обновление таблицы
         self.update_expenses_list()
@@ -75,7 +80,7 @@ class Presenter:
             self.exp_repo.delete(expense.pk)
             self.update_expenses_list()
         except Exception as e:
-            print(f"Ошибка: {e}")
+            print(f"Ошибка delete_expense: {e}")
 
     def update_category_list(self) -> None:
         """
@@ -84,7 +89,39 @@ class Presenter:
         categories = self.cat_repo.get_all()
         categories_list = [(category.pk, category.name) for category in categories]
         self.main_window.add_expense_widget.set_categories(categories_list)
-        print(categories_list)
+        print(categories_list, "update_category_list")
+
+    def _on_category_cell_double_clicked(self, row: int, column: int, category_name: str) -> None:
+        categories = self.cat_repo.get_all()
+        categories = [(category.pk, category.name) for category in categories]
+        self.main_window.expenses_list_widget._update_category_cell(row, column, categories)
+
+    def _on_category_cell_changed(self, row: int, column: int, category_id: int) -> None:
+        print(category_id)
+        expense_id = self.exp_repo.get_all()[row].pk
+        expense = self.exp_repo.get(expense_id)
+        category = self.cat_repo.get(category_id)
+
+        try:
+            print("_on_category_cell_changed запущен")
+            msg_box = QMessageBox()
+            msg_box.setText(f"Вы действительно хотите изменить категорию на {category.name}?")
+            msg_box.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+            msg_box.setDefaultButton(QMessageBox.StandardButton.No)
+            yes_button = msg_box.button(QMessageBox.StandardButton.Yes)
+            yes_button.setText("Да")
+            no_button = msg_box.button(QMessageBox.StandardButton.No)
+            no_button.setText("Нет")
+            ret = msg_box.exec()
+            if ret == QMessageBox.StandardButton.Yes:
+                expense.category = category_id
+                self.exp_repo.update(expense)
+                self.update_expenses_list()
+            else:
+                self.update_expenses_list()
+
+        except Exception as e:
+            print(f"Ошибка _on_category_cell_changed: {e}")
 
     def add_expense(self) -> None:
         """
@@ -104,4 +141,4 @@ class Presenter:
             self.exp_repo.add(expense)
             self.update_expenses_list()
         except Exception as e:
-            print(f"Error adding expense: {e}")
+            print(f"Ошибка add_expense: {e}")

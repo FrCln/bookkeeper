@@ -37,7 +37,7 @@ class AddExpenseWidget(QWidget):
         self.amount_edit = QLineEdit()
         self.amount_edit.setPlaceholderText("0000")
         self.amount_edit.textChanged.connect(self._update_add_button_state)
-        layout.addRow("Количество:", self.amount_edit)
+        layout.addRow("Сумма расхода:", self.amount_edit)
 
         # кнопка для добавления расхода
         self.add_button = QPushButton("Добавить расход")
@@ -98,3 +98,4 @@ class AddExpenseWidget(QWidget):
         self.category_combo.clear()
         self.categories = categories
         self.category_combo.addItems([name for _, name in categories])
+        self.category_combo.close

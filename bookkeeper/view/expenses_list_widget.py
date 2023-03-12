@@ -2,9 +2,9 @@
 Модуль содержит класс виджета расходов
 для отображения информации о расходах таблицей.
 """
-from typing import cast, List, Dict
+from typing import cast, List, Dict, Tuple
 
-from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtCore import pyqtSignal, Qt
 from PyQt6.QtWidgets import (
     QTableWidget,
     QTableWidgetItem,
@@ -13,7 +13,7 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QAbstractItemView,
     QHBoxLayout,
-    QPushButton,
+    QPushButton, QComboBox,
 )
 
 
@@ -23,6 +23,8 @@ class ExpensesListWidget(QWidget):
     """
 
     delete_button_clicked = pyqtSignal(int)
+    category_cell_double_clicked = pyqtSignal(int, int, str)
+    category_cell_changed = pyqtSignal(int, int, int)
 
     def __init__(self) -> None:
         super().__init__()
@@ -49,6 +51,8 @@ class ExpensesListWidget(QWidget):
         week_button.clicked.connect(self.filter_week)
         month_button.clicked.connect(self.filter_month)
 
+        self.table.cellDoubleClicked.connect(self._on_cell_double_clicked)
+
     def init_table(self) -> None:
         """
         Инициализирует таблицу, на которой будут
@@ -56,7 +60,7 @@ class ExpensesListWidget(QWidget):
         """
         self.table.setColumnCount(5)
         self.table.setHorizontalHeaderLabels(
-            ["Категория", "Количество", "Дата", "Комментарий", ""])
+            ["Категория", "Сумма расхода", "Дата", "Комментарий", ""])
         self.table.verticalHeader().setVisible(False)
         self.table.horizontalHeader().setSectionResizeMode(
             QHeaderView.ResizeMode.ResizeToContents)
@@ -96,6 +100,35 @@ class ExpensesListWidget(QWidget):
                 self.table.setCellWidget(row, 4, delete_button)
                 self.table.setEditTriggers(QAbstractItemView.EditTrigger.DoubleClicked)
 
+    def _on_cell_double_clicked(self, row: int, column: int) -> None:
+        if column == 0:
+            item = self.table.item(row, column)
+            self.category_cell_double_clicked.emit(row, column, item.text())
+
+    def _update_category_cell(self, row: int, column: int, categories: List[Tuple[int, str]]) -> None:
+        try:
+            combo_box = QComboBox()
+            self.categories = categories
+            combo_box.addItems([name for _, name in categories])
+            self.table.setCellWidget(row, column, combo_box)
+
+            combo_box.currentIndexChanged.connect(lambda index, row=row, column=column, categories=categories:
+                                                  self.category_cell_changed.emit(row, column, categories[index][0]))
+            self.table.setCellWidget(row, column, combo_box)
+        except Exception as e:
+            print(f"Ошибка _update_category_cell: {e}")
+
+    def delete_row(self) -> None:
+        """
+        Удаляет строку с выбранным расходом из списка расходов
+        и обновляет содержимое таблицы.
+        """
+        delete_button: QPushButton = cast(QPushButton, self.sender())
+        index: int = self.table.indexAt(delete_button.pos()).row()
+        print(index)
+        if index >= 0:
+            self.delete_button_clicked.emit(index)
+
     def filter_day(self) -> None:
         """
         заглушка
@@ -113,14 +146,3 @@ class ExpensesListWidget(QWidget):
         заглушка
         """
         pass
-
-    def delete_row(self) -> None:
-        """
-        Удаляет строку с выбранным расходом из списка расходов
-        и обновляет содержимое таблицы.
-        """
-        delete_button: QPushButton = cast(QPushButton, self.sender())
-        index: int = self.table.indexAt(delete_button.pos()).row()
-        print(index)
-        if index >= 0:
-            self.delete_button_clicked.emit(index)
