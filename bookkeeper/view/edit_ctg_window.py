@@ -208,6 +208,11 @@ class EditCtgWindow(QWidget):
         ctg_item = self.ctgs_widget.currentItem()
         if ctg_item is None:
             return
+        assert isinstance(ctg_item, CategoryItem)
+        if ctg_item.ctg.pk == 0:
+            self.delete_ctg(ctg_item)
+            return
+
         confirm = QMessageBox.warning(self, 'Внимание',
                                       f'Вы уверены, что хотите удалить текущую "'
                                       f'{ctg_item.ctg.name}" и все дочерние категории?',
@@ -215,9 +220,6 @@ class EditCtgWindow(QWidget):
         if confirm == QMessageBox.No:
             return
 
-        assert isinstance(ctg_item, CategoryItem)
         self.delete_ctg(ctg_item)
-        if ctg_item.ctg.pk == 0:
-            return
         self.ctg_deleter(ctg_item.ctg)
         self.ctg_changed.emit()

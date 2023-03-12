@@ -1,9 +1,10 @@
 """
-Widget of expence table
+Widget of expense table
 """
 
 from PySide6 import QtWidgets, QtCore
-from PySide6.QtWidgets import (QWidget, QTableWidget, QMenu, QMessageBox, QTableWidgetItem)
+from PySide6.QtWidgets import \
+    (QWidget, QTableWidget, QMenu, QMessageBox, QTableWidgetItem)
 from datetime import datetime
 
 from .presenters import ExpensePresenter
@@ -12,7 +13,7 @@ from bookkeeper.models.expense import Expense
 from .edit_ctg_window import EditCtgWindow
 
 
-class TableRow():
+class TableRow:
     def __init__(self, exp: Expense):
         self.exp = exp
 
@@ -22,7 +23,7 @@ class TableItem(QTableWidgetItem):
         super().__init__()
         self.row = row
         self.restore()
-    
+
     def validate(self) -> bool:
         return True
 
@@ -72,7 +73,7 @@ class TableCategoryItem(TableItem):
     def validate(self) -> bool:
         ctg_name = self.text()
         return not self.ctg_view.ctg_checker(ctg_name)
-    
+
     def restore(self):
         ctg = self.retriever(self.row.exp.category)
         if ctg is None:
@@ -88,7 +89,7 @@ class TableCategoryItem(TableItem):
         pk = self.ctg_view.ctg_finder(self.text())
         assert pk is not None
         self.row.exp.category = pk
-    
+
     def get_err_msg(self) -> str:
         return 'Нужно ввести существующую категорию.'
 
@@ -116,7 +117,7 @@ class TableDateItem(TableItem):
 
     def update(self):
         self.row.exp.expense_date = datetime.fromisoformat(self.text())
-    
+
     def should_emit_on_upd(self) -> bool:
         return True
 
@@ -205,10 +206,12 @@ class Table(QTableWidget):
             for row in range(self.rowCount()):
                 self.item(row, 2).restore()
         except ValueError as ve:
-            QMessageBox.critical(self, 'Ошибка', f'Критическая ошибка.\n{ve}.\nБудут выставлены некоректные категории.')
+            QMessageBox.critical(self, 'Ошибка',
+                                 f'Критическая ошибка.\n{ve}.'
+                                 f'\nБудут выставлены некорректные категории.')
 
 
-class ExpenceWidget(QWidget):
+class ExpenseWidget(QWidget):
     exp_changed = QtCore.Signal()
 
     def __init__(self, ctg_view: EditCtgWindow) -> None:
@@ -242,8 +245,11 @@ class ExpenceWidget(QWidget):
             try:
                 self.table.add_expense(x)
             except ValueError as ve:
-                QMessageBox.critical(self, 'Ошибка', f'Критическая ошибка.\n{ve}.\n'
-                    f'Запись {x.expense_date.strftime("%Y-%m-%d %H:%M:%S")} будет удалена.')
+                QMessageBox.critical(self, 'Ошибка',
+                                     f'Критическая ошибка.\n{ve}.'
+                                     f'\n'f'Запись '
+                                     f'{x.expense_date.strftime("%Y-%m-%d %H:%M:%S")} '
+                                     f'будет удалена.')
                 list_to_delete.append(x)
         for x in list_to_delete:
             self.exp_deleter(x)
