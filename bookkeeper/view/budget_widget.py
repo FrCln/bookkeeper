@@ -21,6 +21,8 @@ class BudgetWidget(QWidget):
     week_budget_edited = pyqtSignal(float)
     month_budget_edited = pyqtSignal(float)
 
+    expenses_updated = pyqtSignal(float, float, float)
+
     def __init__(self) -> None:
         super().__init__()
 
@@ -50,7 +52,6 @@ class BudgetWidget(QWidget):
         day_budget_label.setStyleSheet("font-size: 12px;")
         self.day_budget_edit = QLineEdit()
         self.day_budget_edit.setPlaceholderText("\u20bd0.00")
-        print(self.day_budget_edit)
 
         week_budget_label = QLabel("Задать бюджет на неделю:")
         week_budget_label.setStyleSheet("font-size: 12px;")
@@ -98,6 +99,8 @@ class BudgetWidget(QWidget):
         self.month_budget_edit.editingFinished.connect(
             lambda: self.update_month_budget(float(self.month_budget_edit.text())))
 
+        self.expenses_updated.connect(self.update_expenses_labels)
+
     def set_month_budget(self, value: float) -> None:
         """
         Устанавливает бюджет на месяц заголовком
@@ -141,14 +144,14 @@ class BudgetWidget(QWidget):
         except ValueError as e:
             print(e)
 
-    def update_expenses_labels(self) -> None:
+    def update_expenses_labels(self, day_expenses: float,
+                               week_expenses: float,
+                               month_expenses: float) -> None:
         """
         Метод для обновления месячных расходов
         """
-        # TODO: расходы в бюджетном виджете
-        day_expenses = 0.0
-        week_expenses = 0.0
-        month_expenses = 0.0
+
         self.day_expenses_label.setText(f"Расходы за день: \u20bd{day_expenses:.2f}")
         self.week_expenses_label.setText(f"Расходы за неделю: \u20bd{week_expenses:.2f}")
         self.month_expenses_label.setText(f"Расходы за месяц: \u20bd{month_expenses:.2f}")
+
