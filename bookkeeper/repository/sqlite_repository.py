@@ -8,12 +8,13 @@ from bookkeeper.repository.abstract_repository import AbstractRepository, T
 
 '''Class for testing with pk field'''
 class Test:
-    pk: int = 0
     name: str
     town: str
-    def __init__(self, name: str = "Ivan", town: str = "Moscow") -> None:
+    pk: int = 0
+    def __init__(self, name: str = "Ivan", town: str = "Moscow", pk:int = 0) -> None:
         self.name = name
         self.town = town
+        self.pk = pk
 
 class SQLiteRepository(AbstractRepository[T]):
     def __init__(self, db_file: str, cls: type) -> None:
@@ -35,6 +36,16 @@ class SQLiteRepository(AbstractRepository[T]):
             raise ValueError(f'trying to add object {obj} with filled `pk` attribute')
         names = ', '.join(self.fields.keys())
         places = ', '.join("?" * len(self.fields))
+        """
+        with sqlite3.connect(self.db_file) as con:
+            cur = con.cursor()
+            query = cur.execute(f'SELECT COUNT(*) FROM {self.table_name};')
+            res = query.fetchall()
+            obj.pk = res[0][0] + 1
+            print(obj.pk)
+        values = [getattr(obj, x) for x in self.fields]
+        print(values)
+        """
         values = [getattr(obj, x) for x in self.fields]
         with sqlite3.connect(self.db_file) as con:
             cur = con.cursor()
@@ -53,7 +64,9 @@ class SQLiteRepository(AbstractRepository[T]):
             if len(results) < 1:
                 return None
             attrs = results[0][1:]
-        return self.cls(*attrs)
+            index = results[0][0]
+        res_object = self.cls(*attrs, pk = index)
+        return res_object
 
     def get_all(self, where: dict[str, Any] | None = None) -> list[T]:
         list_of_objs = []
@@ -63,8 +76,10 @@ class SQLiteRepository(AbstractRepository[T]):
                 res = cur.execute(f"SELECT * FROM {self.table_name};")
                 attribs = res.fetchall()
             for att in attribs:
+                index = att[0]
                 need_attr = att[1:]
-                list_of_objs.append(self.cls(*need_attr))
+                res_object = self.cls(*need_attr, pk = index)
+                list_of_objs.append(res_object)
             return list_of_objs
         else:
             with sqlite3.connect(self.db_file) as con:
@@ -82,7 +97,9 @@ class SQLiteRepository(AbstractRepository[T]):
                 else:
                     for att in sorted_objs:
                         need_attr = att[1:]
-                        list_of_objs.append(self.cls(*need_attr))
+                        index = att[0]
+                        res_object = self.cls(*need_attr, pk = index)
+                        list_of_objs.append(res_object)
                     return list_of_objs
     
     def update(self, obj: T) -> None:

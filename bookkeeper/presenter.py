@@ -27,31 +27,64 @@ cat_repo = SQLiteRepository[Category]('categories.db', Category)
 exp_repo = ExpenseRepository('expences.db', Expense)
 exp_repo.add(expense_test)
 exp_repo.add(expense_test1)
-Category.create_from_tree(read_tree(cats), cat_repo)
+categories_list = Category.create_from_tree(read_tree(cats), cat_repo)
 
 class CategoryPresenter:
     def __init__(self, window, cat_repo):
         self.window = window
         self.category_db = cat_repo
         self.cats = self.category_db.get_all()
-        self.cat_list = []
+        self.cat_names= []
         for cat in self.cats:
-            self.cat_list.append(cat.name)
+            self.cat_names.append(cat.name)
             
-        self.window.set_categories(self.cat_list)
+        self.window.set_categories(self.cat_names)
+        self.window.register_cat_adder(self.add_cat)
+        self.window.register_cat_deleter(self.delete_cat)
+        
+    def add_cat(self, cat, parent):
+        if parent in self.cat_names:
+            parent_id = self.cat_names.index(parent) + 1
+            self.category_db.add(Category(name = cat, parent = parent_id))
+        else:
+            self.category_db.add(Category(name = cat))
+        self.cat_names.append(cat)
+        self.cats.append(self.category_db.get(len(self.cat_names)))
+        
+        
+    def delete_cat(self, cat):
+        cat_id = self.cat_names.index(cat)
+        for categ in self.cats:
+            print(categ)
+            if categ.parent == cat_id + 1:
+                categ.parent = None
+                self.category_db.update(categ)
+        self.category_db.delete(cat_id + 1)
+        self.cat_names.pop(cat_id)
+        self.cats.pop(cat_id)
+                
+        
+        
+    
        
 class ExpencePresenter:
     def __init__(self, window, exp_repo, cat_repo):
         self.window = window
+        self.category_db = cat_repo
         self.expense_db = exp_repo
         self.expenses = self.expense_db.get_all()
+        self.cats = self.category_db.get_all()
+        self.cat_names= []
+        for cat in self.cats:
+            self.cat_names.append(cat.name)
+            
         self.data_to_fill = []
         self.sum = 0
         for exp in self.expenses:
             attrs = []
             attrs.append(exp.added_date)
             attrs.append(str(exp.amount))
-            exp_cat = cat_repo.get(exp.category).name 
+            exp_cat = self.category_db.get(exp.category).name 
             attrs.append(exp_cat)
             attrs.append(exp.expense_date)
             attrs.append(exp.comment)
@@ -61,6 +94,15 @@ class ExpencePresenter:
             
         self.window.fill_table_data(self.data_to_fill)
         self.window.add_given_amount(str(self.sum))
+        self.window.register_expense_adder(self.add_expence)
+        
+    def add_expence(self, amount, category, expense_date, comment):
+        categ_index = self.cat_names.index(category)
+        exp = Expense(amount, categ_index, expense_date, comment = comment)
+        self.expense_db.add(exp)
+        
+       
+            
         
 
 app = QtWidgets.QApplication(sys.argv)

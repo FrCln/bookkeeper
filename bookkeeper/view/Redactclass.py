@@ -2,7 +2,10 @@ import sys
 
 from datetime import datetime
 from PySide6 import QtWidgets, QtCore, QtGui
+from bookkeeper.models.category import Category
+from bookkeeper.models.expense import Expense
 from bookkeeper.view.redactmenu import RedactMenu,CommentMenu
+from collections.abc import Callable
 
 
 class label_widget(QtWidgets.QWidget):
@@ -55,7 +58,7 @@ class MainTable(QtWidgets.QTableWidget):
             for j, x in enumerate(row):
                 self.setItem(
                     i, j, 
-                    QtWidgets.QTableWidgetItem(x)
+                    QtWidgets.QTableWidgetItem(str(x))
                     )
         self.cur_row += len(data)
         
@@ -64,7 +67,7 @@ class MainTable(QtWidgets.QTableWidget):
         for j, element in enumerate(data):
             self.setItem(
                 self.cur_row, j,
-                QtWidgets.QTableWidgetItem(element)
+                QtWidgets.QTableWidgetItem(str(element))
                 )
         self.cur_row += 1
         
@@ -78,6 +81,17 @@ class MainTable(QtWidgets.QTableWidget):
                 cond = False
         if cond == True:
             self.insertRow(row_count)
+            
+    def remove_row(self):
+        if self.rowCount() > 0:
+            self.removeRow(self.rowCount() - 1)
+        self.cur_row -= 1
+    
+    def get_last_expense_sum(self):
+        if self.rowCount() > 0:
+            return self.item(self.cur_row - 1, 1).text()
+        else:
+            return 0
         
         
         
@@ -97,33 +111,51 @@ class BudgetTable(QtWidgets.QTableWidget):
             1, QtWidgets.QHeaderView.Stretch)
         self.setEditTriggers(
             QtWidgets.QAbstractItemView.NoEditTriggers)
-        self.fill_begin_numbers()
-        
-        #Заполнение начальными данными о бюджете    
-    def fill_begin_numbers(self):
-        budgets = [str(1000), str(7000), str(30000)]
-        for i in range(len(budgets)):
+        self.fill_with_zeros()
+  
+        #Заполнение бюджета нулями
+    def fill_with_zeros(self):
+        for i in range(3):
             self.setItem(
                 i, 1, 
-                QtWidgets.QTableWidgetItem(budgets[i])
+                QtWidgets.QTableWidgetItem(str(0))
                 )
         
-        for i in range(len(budgets)):
+        for i in range(3):
             self.setItem(
                 i, 0, 
                 QtWidgets.QTableWidgetItem(str(0))
+                )  
+        
+        #Заполнение редактированными данными о бюджете    
+    def fill_numbers(self, day, week, month):
+        budgets = [day, week, month]
+        for i in range(len(budgets)):
+            self.setItem(
+                i, 1, 
+                QtWidgets.QTableWidgetItem(str(budgets[i]))
                 )
+        
                 
         #Добавление суммы расхода в таблицу бюджета
-    def add_spending(self, text):
+    def add_spending(self, text:str):
         if len(text) != 0:
-            amount = int(text)
+            amount = float(text)
             for i in range(self.rowCount()):
-                cur_amount = int(self.item(i,0).text())
+                cur_amount = float(self.item(i,0).text())
                 self.setItem(
                     i, 0,
                     QtWidgets.QTableWidgetItem(str(cur_amount + amount))
                     )
+                    
+        #Уменьшение суммы в бюджете при удалении расхода            
+    def delete_spending(self, minus:float):
+        for i in range(self.rowCount()):
+            cur_amount = float(self.item(i,0).text())
+            self.setItem(
+                i, 0,
+                QtWidgets.QTableWidgetItem(str(cur_amount - minus))
+                )
         
     	
     	
@@ -135,7 +167,7 @@ class CatChoice(QtWidgets.QComboBox):
         #self.addItems(["Продукты", "Электроника", "Косметика", "Одежда", "Учеба"])
         
         #Добавление категории 
-    def AddItem(self, name:str):
+    def add_item(self, name:str):
         self.addItem(name)
         
         #Установка изначального списка категорий
@@ -177,9 +209,13 @@ class RedactField(QtWidgets.QWidget):
         self.cats = two_widgets_near(self.choicebar, self.redbut, 7)
         self.layout.addLayout(self.cats)
         
-        #Кнопка для добавления
+        #Кнопка для добавления и удаления расхода
+        self.mid_layout = QtWidgets.QHBoxLayout()
         self.addbut = QtWidgets.QPushButton(text = "Добавить")
-        self.layout.addWidget(self.addbut)
+        self.delbut = QtWidgets.QPushButton(text = "Удалить расход")
+        self.mid_layout.addWidget(self.addbut, 7)
+        self.mid_layout.addWidget(self.delbut, 3)
+        self.layout.addLayout(self.mid_layout)
         
         #Метод для получения введенной суммы
     def get_sum(self):
@@ -211,8 +247,11 @@ class MyMainWindow(QtWidgets.QMainWindow):
         #Окно редактирования
         self.red_field = RedactField() 
         self.red_field.addbut.clicked.connect(self.open_comment)
+        #self.red_field.delbut.clicked.connect(self.cancel_expense_in_budget)
+        self.red_field.delbut.clicked.connect(self.cancel_expense)
         #self.red_field.addbut.clicked.connect(self.fill_in_table)
         self.red_field.redbut.clicked.connect(self.open_categ_menu)
+       
         
         self.layout = QtWidgets.QVBoxLayout()
         self.layout.addWidget(self.table)
@@ -221,10 +260,29 @@ class MyMainWindow(QtWidgets.QMainWindow):
         self.main_widget.setLayout(self.layout)
         self.setCentralWidget(self.main_widget)
         self.setWindowTitle("The Bookkeeper App")
+    
+    def register_cat_adder(self, cat_adder: Callable[[Category, Category], None]):
+        self.cat_adder = cat_adder
         
+        
+    def add_cat_to_database(self, cat, parent):
+        self.cat_adder(cat, parent)
         
     def add_category(self, name):
-        self.red_field.combobox.AddItem(name)
+        self.red_field.combobox.add_item(name)
+        
+    def register_cat_deleter(self, cat_deleter: Callable[[Category], None]):
+        self.cat_deleter = cat_deleter
+        
+    def delete_cat_from_database(self, cat):
+        self.cat_deleter(cat)
+        
+    def register_expense_adder(self, exp_adder: Callable[[Expense], None]):
+        self.add_exp = exp_adder
+       
+        
+    def get_all_categories(self):
+        self.red_field.combobox.get_cats()
     
     def get_comment(self, comment):
         self.comment = comment
@@ -248,9 +306,20 @@ class MyMainWindow(QtWidgets.QMainWindow):
         row_data.append(self.date)
         row_data.append(self.comment)
         self.table.fill_row(row_data)
+        self.add_exp(self.red_field.get_sum(), self.red_field.get_category(), 
+                     self.date, self.comment)
+                     
+    def cancel_expense(self):
+        amount = int(self.table.get_last_expense_sum())
+        self.budget_table.delete_spending(amount)
+        self.table.remove_row()
+     
     
     def set_categories(self, items:list):
         self.red_field.combobox.set_cats_list(items)
+        
+    def redact_budget(self, day, week, month):
+        self.budget_table.fill_numbers(day, week, month)
         
     def add_amount(self):
         spending = self.red_field.get_sum()
@@ -268,6 +337,12 @@ class MyMainWindow(QtWidgets.QMainWindow):
         menu = RedactMenu(self)
         menu.setWindowTitle("Редактирование списка категорий")
         menu.exec()
+        
+    def register_cat_adder(self, cat_adder):
+        self.cat_adder = cat_adder
+        
+        
+    
         
         
 	
