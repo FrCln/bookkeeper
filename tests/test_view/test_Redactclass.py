@@ -3,11 +3,11 @@ from bookkeeper.view.Redactclass import MainTable, BudgetTable, CatChoice, Redac
 
 
 def data_for_testing():
-    test_list = [[1, 4, 5, "Hello", "Bye"], ["No", "walk", 10, 6, 7]]
+    test_list = [[1, 4, 5, "Hello", "Bye"], ["No", 6, 10, 6, 7]]
     return test_list
     
 def data_for_testing_last_row():
-    test_row = ["hello", 4 , 3, "Key", "No"]
+    test_row = ["hello", 3 , 3, "Key", "No"]
     return test_row
     
     
@@ -99,6 +99,53 @@ def test_add_cat(qtbot):
     name = "Кино"
     widget.add_item(name)
     assert widget.itemText(widget.count() - 1) == name
+    
+    
+
+def test_main_window_cats(qtbot):
+    widget = MyMainWindow()
+    qtbot.addWidget(widget)
+    cat_field = widget.red_field.combobox
+    
+    items = ["продукты", "молоко", "корм"]
+    widget.set_categories(items)
+    cnt_beg = cat_field.count()
+    all_cats = [cat_field.itemText(i) for i in range(cnt_beg)]
+    assert all_cats == items
+    
+    
+    name = "Тестовая категория"
+    widget.add_category(name)
+    cnt = cat_field.count()
+    assert cat_field.itemText(cnt - 1) == name
+    
+    cnt_new = cat_field.count()
+    all_items = [cat_field.itemText(i) for i in range(cnt_new)]
+    cats = cat_field.get_cats()
+    assert cats == all_items
+    
+ 
+def test_cancel_expense(qtbot):
+    widget = MyMainWindow()
+    qtbot.addWidget(widget)
+    data = data_for_testing()
+    widget.fill_table_data(data)
+    
+    
+    rows_before = widget.table.rowCount()
+    spents_before = float(widget.budget_table.item(0,0).text())
+    num_rows = widget.table.rowCount()
+    amount = float(widget.table.item(num_rows - 1, 1).text())
+    
+    qtbot.mouseClick(
+        widget.red_field.delbut,
+        qt_api.QtCore.Qt.MouseButton.LeftButton
+        )
+    
+    spents_after = float(widget.budget_table.item(0,0).text())
+    rows_after = widget.table.rowCount()
+    assert rows_after == rows_before - 1
+    assert spents_after == spents_before - amount
     
     
 
