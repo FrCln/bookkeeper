@@ -98,18 +98,25 @@ class ExpensesListWidget(QWidget):
             self.table.setCellWidget(row, 4, delete_button)
 
     def _on_cell_double_clicked(self, row: int, column: int) -> None:
-        if column in (1, 2, 3):
+        if column in (1, 3):
+            item = self.table.item(row, column)
+            new_value, ok = QInputDialog.getText(self, "Изменение значения", "Введите новое значение:",
+                                                 text=item.text())
+            if ok:
+                self.expense_cell_changed.emit(row, column, new_value)
+
+        elif column == 2:
             item = self.table.item(row, column)
             new_value, ok = QInputDialog.getText(self, "Изменение значения", "Введите новое значение:",
                                                  text=item.text())
             if ok:
                 try:
                     datetime.strptime(new_value, "%Y-%m-%d")
+                    self.expense_cell_changed.emit(row, column, new_value)
                 except ValueError:
                     QMessageBox.warning(self, "Ошибка ввода даты",
                                         "Введите дату в формате YYYY-MM-DD")
-                else:
-                    self.expense_cell_changed.emit(row, column, new_value)
+                    self.table.setItem(row, column, QTableWidgetItem(item.text()))
 
         elif column == 0:
             item = self.table.item(row, column)
@@ -119,11 +126,16 @@ class ExpensesListWidget(QWidget):
         try:
             combo_box = QComboBox()
             self.categories = categories
-            combo_box.addItems([name for _, name in categories])
+            combo_box.insertSeparator(0)
+
+            categories_sorted = sorted(categories, key=lambda x: x[0])
+
+            combo_box.addItems([name for _, name in categories_sorted])
             self.table.setCellWidget(row, column, combo_box)
 
-            combo_box.currentIndexChanged.connect(lambda index, row=row, column=column, categories=categories:
-                                                  self.category_cell_changed.emit(row, column, categories[index][0]))
+            combo_box.currentIndexChanged.connect(lambda index, row=row, column=column, categories=categories_sorted:
+                                                  self.category_cell_changed.emit(row, column,
+                                                                                  categories[index - 1][0]))
             self.table.setCellWidget(row, column, combo_box)
         except Exception as e:
             print(f"Ошибка _update_category_cell: {e}")
@@ -160,7 +172,7 @@ class ExpensesListWidget(QWidget):
 
 class EditableTableWidgetItem(QTableWidgetItem):
     """
-    A QTableWidgetItem that allows editing.
+    QTableWidgetItem, который допускает редактирование
     """
 
     def __init__(self, text):

@@ -101,9 +101,8 @@ class CategoryWidget(QWidget):
         if name:
             # проверяет нет ли категории в списке
             categories = [self.list.item(i).text() for i in range(self.list.count())]
-            print(categories)
             if name not in categories:
-                self.add_category_signal.emit(name)  # emit the signal with the category name
+                self.add_category_signal.emit(name)
             self.name_edit.clear()
 
     def on_delete_button_clicked(self) -> None:

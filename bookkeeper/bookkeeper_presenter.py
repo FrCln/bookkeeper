@@ -138,7 +138,6 @@ class Presenter:
         category = self.cat_repo.get(category_id)
 
         try:
-            print("_on_category_cell_changed запущен")
             msg_box = QMessageBox()
             msg_box.setText(f"Вы действительно хотите изменить категорию на {category.name}?")
             msg_box.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
