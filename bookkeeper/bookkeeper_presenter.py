@@ -1,5 +1,4 @@
-from datetime import datetime
-from typing import List
+from datetime import datetime, timedelta
 
 from PyQt6.QtWidgets import QMessageBox
 
@@ -9,10 +8,6 @@ from bookkeeper.models.expense import Expense
 
 from bookkeeper.repository.abstract_repository import AbstractRepository
 
-from bookkeeper.view.expenses_list_widget import ExpensesListWidget
-from bookkeeper.view.category_widget import CategoryWidget
-from bookkeeper.view.add_expense_widget import AddExpenseWidget
-from bookkeeper.view.budget_widget import BudgetWidget
 from bookkeeper.view.main_window import MainWindow
 
 
@@ -22,9 +17,10 @@ class Presenter:
     """
 
     def __init__(self, exp_repo: AbstractRepository[Expense],
-                 cat_repo: AbstractRepository[Category]) -> None:
+                 cat_repo: AbstractRepository[Category], bud_repo: AbstractRepository[Budget]) -> None:
         self.cat_repo = cat_repo
         self.exp_repo = exp_repo
+        self.bud_repo = bud_repo
 
     def show_main_window(self):
         self.main_window = MainWindow()
@@ -34,6 +30,8 @@ class Presenter:
 
         # инициализирует список категорий
         self.init_category()
+
+        self.init_budget()
 
         # соединяем сигналы
         self.main_window.expenses_list_widget.delete_button_clicked.connect(self.delete_expense)
@@ -46,6 +44,9 @@ class Presenter:
         self.main_window.category_widget.delete_category_signal.connect(self.delete_category)
         self.main_window.category_widget.add_category_signal.connect(self.add_category)
 
+        self.main_window.budget_widget.day_budget_edited.connect(self.update_day_budget)
+        self.main_window.budget_widget.week_budget_edited.connect(self.update_week_budget)
+        self.main_window.budget_widget.month_budget_edited.connect(self.update_month_budget)
 
         # обновление таблицы расходов и категорий
         self.update_expenses_list()
@@ -261,3 +262,86 @@ class Presenter:
         self.update_expenses_list()
         self.update_category_list()
         self.init_category()
+
+    def update_day_budget(self, amount: float) -> None:
+        """
+        Обновляет или добавляет сумму дневного бюджета
+        """
+        today = datetime.now().date()
+        today_str = today.strftime("%Y-%m-%d %H:%M:%S")
+        budget = self.bud_repo.get_all({'period': 'day', 'term': today_str})
+
+        if budget:
+            budget = budget[0]
+            budget.amount = amount
+            budget.period = "day"
+            self.bud_repo.update(budget)
+        else:
+            budget = Budget.create_for_current_day(amount, self.bud_repo)
+
+        self.main_window.budget_widget.day_budget_label.setText(f"\u20bd{amount:.2f}")
+
+    def update_week_budget(self, amount: float) -> None:
+        """
+        Обновляет или добавляет сумму недельного бюджета
+        """
+        today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        week_start = today - timedelta(days=today.weekday())
+        budget = self.bud_repo.get_all({'period': 'week', 'term': week_start})
+
+        if budget:
+            budget = budget[0]
+            budget.amount = amount
+            budget.period = "week"
+            print(budget)
+            self.bud_repo.update(budget)
+        else:
+            budget = Budget.create_for_current_week(amount, self.bud_repo)
+
+        self.main_window.budget_widget.week_budget_label.setText(f"\u20bd{amount:.2f}")
+
+    def update_month_budget(self, amount: float) -> None:
+        """
+        Обновляет или добавляет сумму месячного бюджета
+        """
+        term = datetime.now().replace(day=1)
+        budgets = self.bud_repo.get_all({'period': 'month'})
+        budget = next((b for b in budgets if
+                       datetime.strptime(b.term, '%Y-%m-%d %H:%M:%S.%f').month == term.month and datetime.strptime(
+                           b.term,
+                           '%Y-%m-%d %H:%M:%S.%f').year == term.year),
+                      None)
+
+        if budget:
+            budget.amount = amount
+            budget.period = "month"
+            self.bud_repo.update(budget)
+        else:
+            budget = Budget.create_for_current_month(amount, self.bud_repo)
+
+        self.main_window.budget_widget.month_budget_label.setText(f"\u20bd{amount:.2f}")
+
+    def init_budget(self):
+        """
+        Устанавливает значения из базы данных
+        """
+        print("БЮДЖЕТ")
+        today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        week_start = today - timedelta(days=today.weekday())
+        current_month = datetime.now().replace(day=1)
+        day_budget = self.bud_repo.get_all({'period': 'day', 'term': today})
+        week_budget = self.bud_repo.get_all({'period': 'week', 'term': week_start})
+        month_budget = self.bud_repo.get_all({'period': 'month'})
+        month_amount = next((b for b in month_budget if
+                       datetime.strptime(b.term, '%Y-%m-%d %H:%M:%S.%f').month == current_month.month and datetime.strptime(
+                           b.term,
+                           '%Y-%m-%d %H:%M:%S.%f').year == current_month.year),
+                      None)
+        print(month_budget)
+
+        if day_budget:
+            self.main_window.budget_widget.day_budget_label.setText(f"\u20bd{day_budget[0].amount:.2f}")
+        if week_budget:
+            self.main_window.budget_widget.week_budget_label.setText(f"\u20bd{week_budget[0].amount:.2f}")
+        if month_amount:
+            self.main_window.budget_widget.set_month_budget(month_amount.amount)

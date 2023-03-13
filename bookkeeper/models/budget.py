@@ -19,6 +19,7 @@ class Budget:
     added_date: datetime = field(default_factory=datetime.now)
     comment: str = ''
     pk: int = 0
+    period: str = "month"
 
     @classmethod
     def create_for_current_month(cls, amount: float,
@@ -31,16 +32,17 @@ class Budget:
         ----------
         amount - сумма бюджета на месяц
         repo - репозиторий для сохранения объектов
+        period - на месяц
 
         Returns
         -------
         Созданный объект Budget
         """
         term = datetime.now().replace(day=1)
-        existing_budgets = repo.get_all({'term': term})
+        existing_budgets = repo.get_all({'term': term, 'period': 'month'})
         if existing_budgets:
             return existing_budgets[0]
-        budget = cls(term, amount, comment=comment)
+        budget = cls(term, amount, comment=comment, period='month')
         repo.add(budget)
         return budget
 
@@ -55,6 +57,7 @@ class Budget:
         ----------
         amount - сумма бюджета на неделю
         repo - репозиторий для сохранения объектов
+        period - на неделю
 
         Returns
         -------
@@ -63,10 +66,10 @@ class Budget:
         today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
         week_start = today - timedelta(days=today.weekday())
         week_end = week_start + timedelta(days=6)
-        existing_budgets = repo.get_all({'term': week_start})
+        existing_budgets = repo.get_all({'term': week_start, 'period': 'week'})
         if existing_budgets:
             return existing_budgets[0]
-        budget = cls(week_start, amount, comment=comment)
+        budget = cls(week_start, amount, comment=comment, period='week')
         repo.add(budget)
         return budget
 
@@ -81,15 +84,16 @@ class Budget:
         ----------
         amount - сумма бюджета на день
         repo - репозиторий для сохранения объектов
+        period - на день
 
         Returns
         -------
         Созданный объект Budget
         """
         today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-        existing_budgets = repo.get_all({'term': today})
+        existing_budgets = repo.get_all({'term': today, 'period': 'day'})
         if existing_budgets:
             return existing_budgets[0]
-        budget = cls(today, amount, comment=comment)
+        budget = cls(today, amount, comment=comment, period='day')
         repo.add(budget)
         return budget

@@ -17,8 +17,8 @@ class MainWindow(QMainWindow):
         tab_widget = QTabWidget()
 
         # виджет бюджета
-        budget = BudgetWidget()
-        tab_widget.addTab(budget, "Бюджет")
+        self.budget_widget = BudgetWidget()
+        tab_widget.addTab(self.budget_widget, "Бюджет")
 
         # виджет категорий
         self.category_widget = CategoryWidget()
