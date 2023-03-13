@@ -6,8 +6,9 @@ from PyQt6.QtWidgets import QMessageBox
 from bookkeeper.models.budget import Budget
 from bookkeeper.models.category import Category
 from bookkeeper.models.expense import Expense
+
 from bookkeeper.repository.abstract_repository import AbstractRepository
-from bookkeeper.view import main_window
+
 from bookkeeper.view.expenses_list_widget import ExpensesListWidget
 from bookkeeper.view.category_widget import CategoryWidget
 from bookkeeper.view.add_expense_widget import AddExpenseWidget
@@ -43,6 +44,7 @@ class Presenter:
         self.main_window.expenses_list_widget.expense_cell_changed.connect(self.update_expense)
         self.main_window.category_widget.category_name_edited.connect(self.update_category_name)
         self.main_window.category_widget.delete_category_signal.connect(self.delete_category)
+        self.main_window.category_widget.add_category_signal.connect(self.add_category)
 
 
         # обновление таблицы расходов и категорий
@@ -64,14 +66,22 @@ class Presenter:
         Обновляет содержимое таблицы расходов
         на основе данных из репозитория.
         """
-        """
-        Обновляет содержимое таблицы расходов
-        на основе данных из репозитория.
-        """
+        categories = self.cat_repo.get_all()
         objects = self.exp_repo.get_all()
         expenses = [expense for expense in objects if isinstance(expense, Expense)]
         expenses_dict = []
         categories_dict = {}
+
+        # Ищем категорию "Удалено" и получаем её pk
+        deleted_category_pk = None
+        for deleted_category in categories:
+            if deleted_category.name == "Удалено":
+                deleted_category_pk = deleted_category.pk
+                break
+
+        if deleted_category_pk is None:
+            deleted_category = Category(name="Удалено")
+            self.cat_repo.add(deleted_category)
 
         # сопоставляем объекты Expense со словарём в виджете
         for expense in expenses:
@@ -79,14 +89,11 @@ class Presenter:
             if category is None:
                 category = self.cat_repo.get(expense.category)
                 if category is None:
-                    # cоздаём новую "Удалено" категорию, если категория не найдена
-                    category = Category(name="Удалено")
-                    self.cat_repo.add(category)
-                    categories_dict[expense.category] = category
+                    # приписываем запись к категории «Удалено»
+                    category = deleted_category
                     expense.category = category.pk
                     self.exp_repo.update(expense)
-                else:
-                    categories_dict[expense.category] = category
+                categories_dict[expense.category] = category
 
             expense_dict = {
                 "date": datetime.strptime(expense.expense_date, "%Y-%m-%d %H:%M:%S.%f").strftime("%Y-%m-%d"),
@@ -215,6 +222,7 @@ class Presenter:
         # обновление таблицы расходов и категорий
         self.update_expenses_list()
         self.update_category_list()
+        self.init_category()
 
     def delete_category(self, category_name: str):
         """
@@ -244,3 +252,13 @@ class Presenter:
             self.update_category_list()
         except Exception as e:
             print(f"Ошибка delete_category: {e}")
+
+    def add_category(self, category_name: str) -> None:
+        """
+        Добавляет новую категорию
+        """
+        category = Category(name=category_name)
+        self.cat_repo.add(category)
+        self.update_expenses_list()
+        self.update_category_list()
+        self.init_category()

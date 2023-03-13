@@ -25,6 +25,7 @@ class CategoryWidget(QWidget):
     """
     category_name_edited = pyqtSignal(str, str)
     delete_category_signal = pyqtSignal(str)
+    add_category_signal = pyqtSignal(str)
 
     def __init__(self) -> None:
         super().__init__()
@@ -83,9 +84,9 @@ class CategoryWidget(QWidget):
         categories = sorted(categories)
 
         # проверяет существование категория "Удалено"
-        if "Deleted" in categories:
-            categories.remove("Deleted")
-            categories.append("Deleted")
+        if "Удалено" in categories:
+            categories.remove("Удалено")
+            categories.append("Удалено")
 
         for category_name in categories:
             item = QListWidgetItem(category_name)
@@ -102,7 +103,7 @@ class CategoryWidget(QWidget):
             categories = [self.list.item(i).text() for i in range(self.list.count())]
             print(categories)
             if name not in categories:
-                self.list.addItem(name)
+                self.add_category_signal.emit(name)  # emit the signal with the category name
             self.name_edit.clear()
 
     def on_delete_button_clicked(self) -> None:
@@ -119,7 +120,7 @@ class CategoryWidget(QWidget):
                             item: QListWidgetItem) -> None:
         """
         Заменяет старый текст элемента списка новым текстом,
-        введенным в виджете редактирования строк.
+        введенным в редактировании строки.
         """
         # получаем новое имя категории
         new_text = line_edit.text()
