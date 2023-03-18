@@ -115,4 +115,23 @@ class Category:
             cat = cls(child, created[parent].pk if parent is not None else None)
             repo.add(cat)
             created[child] = cat
+
         return list(created.values())
+
+    @classmethod
+    def get_all_as_tree(
+            cls,
+            repo: AbstractRepository['Category']) -> str:
+        """
+        Считать объекты Category из репозитория repo и
+        представить их в виде дерева, например:
+
+        parent
+            child1
+                child2
+            child3
+        """
+
+        return "\n".join([
+            " " * 4 * len(list(i.get_all_parents(repo))) + i.name for i in repo.get_all()
+        ])

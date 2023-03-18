@@ -21,8 +21,8 @@ def clear_db():
 def custom_class():
     @dataclass
     class Custom:
-        name: str
         value: int
+        name: str = None
         pk: int = 0
 
     return Custom
@@ -91,3 +91,12 @@ def test_get_all_with_condition(repo, custom_class):
         repo.add(obj)
     assert repo.get_all({'value': 0}) == [objects[0]]
     assert repo.get_all({'name': 'object'}) == objects
+
+
+def test_get_all_with_none_condition(repo, custom_class):
+    objects = [custom_class(value=i) for i in range(5)]
+    for obj in objects:
+        repo.add(obj)
+    assert repo.get_all({'value': 0}) == [objects[0]]
+    assert repo.get_all({'name': None}) == objects
+    assert repo.get_all({'name': None, 'value': 1}) == [objects[1]]

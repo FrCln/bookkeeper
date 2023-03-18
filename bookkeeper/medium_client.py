@@ -1,7 +1,7 @@
 """
 Тестовый скрипт для терминала средней сложности
 """
-
+# pylint: disable=duplicate-code
 from bookkeeper.models.category import Category
 from bookkeeper.models.expense import Expense
 from bookkeeper.repository.sqlite_repository import SQLiteRepository

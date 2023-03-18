@@ -7,6 +7,7 @@ import pytest
 
 from bookkeeper.models.category import Category
 from bookkeeper.repository.memory_repository import MemoryRepository
+from bookkeeper.utils import read_tree
 
 
 @pytest.fixture
@@ -106,3 +107,14 @@ def test_create_from_tree_error(repo):
     tree = [('1', 'parent'), ('parent', None)]
     with pytest.raises(KeyError):
         Category.create_from_tree(tree, repo)
+
+
+def test_get_all_as_tree(repo):
+    tree = (
+        "мясо\n"
+        "    мясные продукты\n"
+        "книги\n"
+        "молочные продукты"
+    )
+    Category.create_from_tree(read_tree(tree.splitlines()), repo)
+    assert tree == Category.get_all_as_tree(repo)

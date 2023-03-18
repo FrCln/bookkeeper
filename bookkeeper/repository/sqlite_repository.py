@@ -53,7 +53,7 @@ class SQLiteRepository(AbstractRepository[T]):
         return pk
 
     def _create_object(self, pk: int, row: list[str]) -> T:
-        obj = self.cls(**dict(zip(self.columns, row)))
+        obj: T = self.cls(**dict(zip(self.columns, row)))
         obj.pk = pk
         return obj
 
@@ -80,9 +80,22 @@ class SQLiteRepository(AbstractRepository[T]):
                 res = cursor.execute(sql_string)
 
         else:
-            where_part = ' AND '.join([f'{i} = ?' for i in where.keys()])
+            where_part1 = ' AND '.join(
+                [f'{i} = ?' for i in where.keys() if where[i] is not None]
+            )
+            where_part2 = ' AND '.join(
+                [f'{i} IS NULL' for i in where.keys() if where[i] is None]
+            )
+            if where_part1 and where_part2:
+                where_part = where_part1 + " AND " + where_part2
+            else:
+                if where_part1:
+                    where_part = where_part1
+                else:
+                    where_part = where_part2
+
             sql_string = f"SELECT ROWID, * FROM {self.table} WHERE {where_part}"
-            items = [where[i] for i in where.keys()]
+            items = [where[i] for i in where.keys() if where[i] is not None]
             with sqlite3.connect(self.db_filename) as connection:
                 cursor = connection.cursor()
                 res = cursor.execute(sql_string, items)
