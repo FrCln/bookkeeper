@@ -15,6 +15,7 @@ def test_can_create_subclass():
         def get_all(self, where=None): pass
         def update(self, obj): pass
         def delete(self, pk): pass
+        def clear(self): pass
 
     t = Test()
     assert isinstance(t, AbstractRepository)

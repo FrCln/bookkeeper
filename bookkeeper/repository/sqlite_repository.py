@@ -1,7 +1,7 @@
 """
 Модуль описывает репозиторий, сохраняющий в файл на диске
 """
-
+import datetime
 from typing import Any
 from inspect import get_annotations
 import sqlite3
@@ -25,6 +25,7 @@ class SQLiteRepository(AbstractRepository[T]):
         self.columns_str = ', '.join(self.columns)
 
         sql_string = f"CREATE TABLE IF NOT EXISTS {self.table} ( {self.columns_str} )"
+
         with sqlite3.connect(self.db_filename) as connection:
             cursor = connection.cursor()
             cursor.execute(sql_string)
@@ -54,6 +55,9 @@ class SQLiteRepository(AbstractRepository[T]):
 
     def _create_object(self, pk: int, row: list[str]) -> T:
         obj: T = self.cls(**dict(zip(self.columns, row)))
+        for i, an_type in get_annotations(self.cls).items():
+            if an_type == datetime.datetime:
+                setattr(obj, i, datetime.datetime.fromisoformat(getattr(obj, i)))
         obj.pk = pk
         return obj
 
@@ -132,5 +136,13 @@ class SQLiteRepository(AbstractRepository[T]):
 
         if cursor.rowcount == 0:
             raise ValueError("Deleting object with unknown 'pk'")
+
+        connection.close()
+
+    def clear(self) -> None:
+        sql_string = f"DELETE FROM {self.table}"
+        with sqlite3.connect(self.db_filename) as connection:
+            cursor = connection.cursor()
+            cursor.execute(sql_string)
 
         connection.close()

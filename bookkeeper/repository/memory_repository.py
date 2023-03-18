@@ -41,3 +41,7 @@ class MemoryRepository(AbstractRepository[T]):
 
     def delete(self, pk: int) -> None:
         self._container.pop(pk)
+
+    def clear(self) -> None:
+        self._container = {}
+        self._counter = count(1)

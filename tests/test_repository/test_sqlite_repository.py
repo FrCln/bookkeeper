@@ -2,7 +2,8 @@ from bookkeeper.repository.sqlite_repository import SQLiteRepository
 
 import pytest
 import sqlite3
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from datetime import datetime
 
 TEST_DB_FILE = "dbfiles/database_test.db"
 
@@ -23,6 +24,7 @@ def custom_class():
     class Custom:
         value: int
         name: str = None
+        date: datetime = field(default_factory=datetime.now)
         pk: int = 0
 
     return Custom
@@ -100,3 +102,19 @@ def test_get_all_with_none_condition(repo, custom_class):
     assert repo.get_all({'value': 0}) == [objects[0]]
     assert repo.get_all({'name': None}) == objects
     assert repo.get_all({'name': None, 'value': 1}) == [objects[1]]
+
+
+def test_clear(repo, custom_class):
+    objects = [custom_class(value=i) for i in range(5)]
+    for obj in objects:
+        repo.add(obj)
+    repo.clear()
+    assert repo.get_all() == []
+
+
+def test_date_convert(repo, custom_class):
+    objects = [custom_class(value=i) for i in range(5)]
+    for obj in objects:
+        repo.add(obj)
+
+    assert type(repo.get_all()[0].date) == datetime

@@ -3,6 +3,7 @@
 """
 
 from typing import Iterable, Iterator
+import datetime
 
 
 def _get_indent(line: str) -> int:
@@ -61,3 +62,15 @@ def read_tree(lines: Iterable[str]) -> list[tuple[str, str | None]]:
         last_name = name
         last_indent = indent
     return result
+
+
+def date_converter(iso_str: str | datetime.datetime) -> str:
+    """
+    Преобразует строку в iso-формате в удобно читаемую
+    """
+    if isinstance(iso_str, datetime.datetime):
+        date = iso_str
+    else:
+        date = datetime.datetime.fromisoformat(iso_str)
+
+    return date.strftime("%d.%m.%Y %H:%M")

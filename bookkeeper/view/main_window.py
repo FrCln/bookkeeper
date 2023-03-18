@@ -1,5 +1,6 @@
 """Модуль, содержащий главный виджет"""
 # pylint: disable=c-extension-no-member
+# pylint: disable=too-few-public-methods
 from typing import Any
 from PySide6 import QtWidgets
 

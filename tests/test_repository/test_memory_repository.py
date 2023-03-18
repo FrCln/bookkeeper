@@ -69,3 +69,11 @@ def test_get_all_with_condition(repo, custom_class):
         objects.append(o)
     assert repo.get_all({'name': '0'}) == [objects[0]]
     assert repo.get_all({'test': 'test'}) == objects
+
+
+def test_clear(repo, custom_class):
+    objects = [custom_class() for i in range(5)]
+    for o in objects:
+        repo.add(o)
+    repo.clear()
+    assert repo.get_all() == []
