@@ -93,16 +93,8 @@ class BudgetTableBox(QtWidgets.QGroupBox):
 
         item = QtWidgets.QTableWidgetItem
 
-        for budget in budgets:
-            match budget.period:
-                case "day":
-                    row = 0
-                case "week":
-                    row = 1
-                case "month":
-                    row = 2
-                case _:
-                    row = 3
+        for row, budget in enumerate(budgets):
+
             self.table.setItem(row, 0, item(str(budget.spent)))
             self.table.setItem(row, 1, item(str(budget.total)))
 

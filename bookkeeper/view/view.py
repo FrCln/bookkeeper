@@ -21,10 +21,6 @@ class View:
     Класс, описывающий отображение (View)
     """
     def __init__(self) -> None:
-        self.categories: list[Category] = []
-        self.expenses: list[Expense] = []
-        self.budgets: list[Budget] = []
-
         self._setup_app()
         self._setup_main_window()
         self._setup_cat_window()
